@@ -37,16 +37,12 @@ with conn.cursor() as cursor:
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS green (
-            id SERIAL PRIMARY KEY,
-            city TEXT NOT NULL, state TEXT NOT NULL,
-
             year INT NOT NULL,
             power_kwh DOUBLE PRECISION NOT NULL,
             water_kgal DOUBLE PRECISION NOT NULL,
             co2_kg DOUBLE PRECISION NOT NULL,
 
-            FOREIGN KEY (city, state) REFERENCES city(name, state)
-                ON DELETE CASCADE
+            PRIMARY KEY (year)
         );
     """)
 conn.commit()
@@ -76,24 +72,24 @@ def get_json(city: str, state: str) -> dict:
         else:
             return {}
 
-def set_green(city: str, state: str, year: int, power_kwh: float, water_kgal: float, co2_kg: float):
+def set_green(year: int, power_kwh: float, water_kgal: float, co2_kg: float):
     with conn.cursor() as cursor:
         cursor.execute("""
-            INSERT INTO green (city, state, year, power_kwh, water_kgal, co2_kg)
-            VALUES (%s, %s, %s, %s, %s, %s)
-            ON CONFLICT (city, state, year)
-            DO UPDATE SET year = %s, power_kwh = %s, water_kgal = %s, co2_kg = %s
-        """, (city, state, year, power_kwh, water_kgal, co2_kg, year, power_kwh, water_kgal, co2_kg))
+            INSERT INTO green (year, power_kwh, water_kgal, co2_kg)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (year)
+            DO UPDATE SET power_kwh = %s, water_kgal = %s, co2_kg = %s
+        """, (year, power_kwh, water_kgal, co2_kg, power_kwh, water_kgal, co2_kg))
     conn.commit()
     
-def get_green(city: str, state: str) -> list:
+def get_green() -> list:
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT
                 year, power_kwh, water_kgal, co2_kg
-                FROM green WHERE city = %s AND state = %s
+                FROM green
             ORDER BY year;
-        """, (city, state))
+        """)
         result = [list(row) for row in cursor.fetchall()]
         if result:
             return result
