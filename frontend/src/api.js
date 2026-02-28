@@ -53,6 +53,7 @@ export const api = {
 
   // ── Articles / News ──
   articles: () => fetchJSON('/articles'),
+  adminArticles: (token) => fetchJSON('/admin/articles', { token }),
   article: (id) => fetchJSON(`/articles/${id}`),
   updateArticle: (id, payload, token) =>
     fetchJSON(`/articles/${id}`, {
@@ -66,4 +67,15 @@ export const api = {
     const qs = tech ? `?tech=${encodeURIComponent(tech)}` : '';
     return fetchJSON(`/articles/generate${qs}`, { method: 'POST', token });
   },
+  setArticleStatus: (id, status, token) =>
+    fetchJSON(`/articles/${id}/status?status=${encodeURIComponent(status)}`, {
+      method: 'POST',
+      token,
+    }),
+  deleteArticle: (id, token) =>
+    fetchJSON(`/articles/${id}`, {
+      method: 'DELETE',
+      token,
+    }),
+
 };

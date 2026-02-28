@@ -13,6 +13,7 @@ import NewsArticle from './pages/public/NewsArticle';
 import GenerateAdmin from './pages/protected/GenerateAdmin';
 import About from './pages/public/About';
 import AskGemini from './pages/protected/AskGemini';
+import GenerateAuthBridge from './pages/public/GenerateAuthBridge';
 import NotFound from './pages/public/NotFound';
 import { canAccessGenerate, isEduEmail } from './authz';
 
@@ -70,6 +71,7 @@ export default function App() {
         <Route path="/ask" element={<EduProtected><AskGemini /></EduProtected>} />
         <Route path="/news" element={<News />} />
         <Route path="/news/:articleId" element={<NewsArticle />} />
+        <Route path="/generate-auth" element={<GenerateAuthBridge />} />
         <Route path="/generate" element={<Protected><GenerateProtected><GenerateAdmin /></GenerateProtected></Protected>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

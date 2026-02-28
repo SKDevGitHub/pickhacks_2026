@@ -15,7 +15,7 @@ I have real-time access to all the emerging technology data in our system, inclu
 How can I help your team today?`;
 
 export default function AskGemini() {
-  const { getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently, getAccessTokenWithPopup } = useAuth0();
   const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
   const [messages, setMessages] = useState([
     { role: 'assistant', content: WELCOME },
@@ -39,10 +39,20 @@ export default function AskGemini() {
   }, []);
 
   async function getApiToken() {
-    if (audience) {
-      return getAccessTokenSilently({ authorizationParams: { audience } });
+    try {
+      if (audience) {
+        return await getAccessTokenSilently({ authorizationParams: { audience } });
+      }
+      return await getAccessTokenSilently();
+    } catch (err) {
+      if (err?.error === 'consent_required' || err?.error === 'login_required') {
+        if (audience) {
+          return getAccessTokenWithPopup({ authorizationParams: { audience } });
+        }
+        return getAccessTokenWithPopup();
+      }
+      throw err;
     }
-    return getAccessTokenSilently();
   }
 
   async function handleSend(e) {

@@ -8,10 +8,12 @@ from fastapi.responses import Response
 
 from core.auth import require_article_admin
 from data.article_generator import (
+    delete_article,
     generate_article,
     get_article,
     list_articles,
     list_technology_stems,
+    set_article_status,
     update_article,
 )
 from services.tts import (
@@ -35,6 +37,7 @@ class ArticleUpdatePayload(BaseModel):
     summary: str = Field(..., min_length=1, max_length=2000)
     content: str = Field(..., min_length=1, max_length=20000)
     tags: list[str] = Field(default_factory=list, max_length=20)
+    status: Optional[str] = Field(default=None, pattern='^(draft|published)$')
 
     @field_validator('tags')
     @classmethod
@@ -52,14 +55,20 @@ class ArticleUpdatePayload(BaseModel):
 
 @router.get("/articles")
 async def api_list_articles():
-    """Return all generated articles, newest first."""
-    return list_articles()
+    """Public article feed (published only), newest first."""
+    return list_articles(include_drafts=False)
+
+
+@router.get("/admin/articles")
+async def api_list_articles_admin(_admin: dict = Depends(require_article_admin)):
+    """Admin article feed (includes drafts), newest first."""
+    return list_articles(include_drafts=True)
 
 
 @router.get("/articles/{article_id}")
 async def api_get_article(article_id: str):
-    """Return a single article by its ID."""
-    article = get_article(article_id)
+    """Public article detail (published only)."""
+    article = get_article(article_id, include_drafts=False)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
     return article
@@ -101,6 +110,31 @@ async def api_update_article(
     if not updated:
         raise HTTPException(status_code=404, detail="Article not found")
     return updated
+
+
+@router.post("/articles/{article_id}/status")
+async def api_set_article_status(
+    article_id: str,
+    status: str = Query(..., pattern='^(draft|published)$'),
+    _admin: dict = Depends(require_article_admin),
+):
+    """Set article publication status (draft/published)."""
+    updated = set_article_status(article_id, status)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Article not found")
+    return updated
+
+
+@router.delete("/articles/{article_id}")
+async def api_delete_article(
+    article_id: str,
+    _admin: dict = Depends(require_article_admin),
+):
+    """Delete an article permanently."""
+    deleted = delete_article(article_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Article not found")
+    return {"ok": True, "id": article_id}
 
 
 @router.get("/articles/{article_id}/audio")
