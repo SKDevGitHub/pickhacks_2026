@@ -51,7 +51,6 @@ def intersections(city: str, state: str) -> int:
 
     pop = int(c[1])
 
-    gaz_url = "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2023_Gaz_place_national.txt"
     gaz_df = pandas.read_csv("./gaz/Gaz_places_national.txt", sep="\t", encoding="latin-1")
     gaz_df.columns = gaz_df.columns.str.strip()
     gaz_df["USPS"] = gaz_df["USPS"].str.strip()
