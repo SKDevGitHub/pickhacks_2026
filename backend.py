@@ -6,8 +6,11 @@ Docs:
 import csv
 import json
 import os
+import re
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import httpx
 
 # ── App setup ──────────────────────────────────────────────────────────────────
 
@@ -29,8 +32,22 @@ app.add_middleware(
 # Directory where city JSON files live (same folder as main.py by default) they are in data/cities
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data", "cities")
 
+# Directory where article JSON files live
+ARTICLES_DIR = os.path.join(os.path.dirname(__file__), "data", "articles")
+
+# Directory where cached article audio files live
+ARTICLES_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "data", "articles_audio")
+
 # Forecast CSV (per-intersection baseline, 2023-2050)
 FORECAST_CSV = os.path.join(os.path.dirname(__file__), "data", "forecast_per_intersection.csv")
+
+# ElevenLabs config (set these in your environment or a .env file)
+ELEVENLABS_API_KEY  = os.getenv("ELEVENLABS_API_KEY", "")
+ELEVENLABS_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRTNY")  # George
+ELEVENLABS_MODEL_ID = os.getenv("ELEVENLABS_MODEL_ID", "eleven_multilingual_v2")
+ELEVENLABS_TTS_URL  = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}/stream"
+
+MAX_TTS_CHARS = 5_000
 
 
 def load_city(city: str) -> dict:
@@ -73,6 +90,74 @@ def load_forecast_csv() -> list[dict]:
                 "confidence": float(row["confidence"]),
             })
     return rows
+
+
+def load_article(article_id: str) -> dict:
+    """Load an article JSON file by ID from data/articles/."""
+    path = os.path.join(ARTICLES_DIR, f"{article_id}.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Article '{article_id}' not found.")
+    with open(path) as f:
+        return json.load(f)
+
+
+def markdown_to_plaintext(md: str) -> str:
+    """Strip Markdown syntax so ElevenLabs doesn't read it aloud."""
+    text = re.sub(r"^#{1,6}\s+", "", md, flags=re.MULTILINE)
+    text = re.sub(r"\*{1,2}(.+?)\*{1,2}", r"\1", text)
+    text = re.sub(r"_{1,2}(.+?)_{1,2}", r"\1", text)
+    text = re.sub(r"^[\-\*]\s+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def build_tts_text(article: dict) -> str:
+    """Combine title, summary, and content into the text sent to ElevenLabs."""
+    title   = article.get("title", "")
+    summary = article.get("summary", "")
+    content = markdown_to_plaintext(article.get("content", ""))
+    full = f"{title}.\n\n{summary}.\n\n{content}"
+    if len(full) > MAX_TTS_CHARS:
+        full = full[:MAX_TTS_CHARS].rsplit(" ", 1)[0] + "…"
+    return full
+
+
+async def stream_elevenlabs(text: str):
+    """Async generator that streams MP3 bytes from ElevenLabs."""
+    if not ELEVENLABS_API_KEY:
+        raise HTTPException(status_code=500, detail="ELEVENLABS_API_KEY is not configured.")
+
+    headers = {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    }
+    payload = {
+        "text": text,
+        "model_id": ELEVENLABS_MODEL_ID,
+        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+    }
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        async with client.stream("POST", ELEVENLABS_TTS_URL, headers=headers, json=payload) as resp:
+            if resp.status_code == 429:
+                body = await resp.aread()
+                try:
+                    detail = json.loads(body).get("detail", {})
+                    msg = detail if isinstance(detail, str) else json.dumps(detail)
+                except Exception:
+                    msg = body.decode(errors="replace")
+                raise HTTPException(status_code=429, detail=msg)
+
+            if not resp.is_success:
+                body = await resp.aread()
+                raise HTTPException(
+                    status_code=resp.status_code,
+                    detail=f"ElevenLabs error: {body.decode(errors='replace')[:300]}",
+                )
+
+            async for chunk in resp.aiter_bytes(chunk_size=4096):
+                yield chunk
 
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
@@ -190,3 +275,50 @@ def get_city_forecast(
         "data_type":     data_type or "all",
         "rows":          scaled,
     }
+
+
+# ── Article audio route ────────────────────────────────────────────────────────
+
+@app.get(
+    "/api/articles/{article_id}/audio",
+    summary="Stream ElevenLabs TTS narration for a news article",
+)
+async def get_article_audio(article_id: str):
+    """
+    Checks data/articles_audio/{article_id}.mp3 first — if it exists, serves it directly.
+    Otherwise generates via ElevenLabs, saves to the cache folder, then serves it.
+
+    Requires ELEVENLABS_KEY to be set in the environment.
+    """
+    os.makedirs(ARTICLES_AUDIO_DIR, exist_ok=True)
+    cached_path = os.path.join(ARTICLES_AUDIO_DIR, f"{article_id}.mp3")
+
+    # ── Serve from cache if available ─────────────────────────────────────────
+    if os.path.exists(cached_path):
+        def iter_cached():
+            with open(cached_path, "rb") as f:
+                while chunk := f.read(4096):
+                    yield chunk
+        return StreamingResponse(
+            iter_cached(),
+            media_type="audio/mpeg",
+            headers={"Cache-Control": "no-cache"},
+        )
+
+    # ── Generate, cache, then stream ──────────────────────────────────────────
+    article  = load_article(article_id)
+    tts_text = build_tts_text(article)
+
+    async def generate_and_cache():
+        audio_bytes = b""
+        async for chunk in stream_elevenlabs(tts_text):
+            audio_bytes += chunk
+            yield chunk
+        with open(cached_path, "wb") as f:
+            f.write(audio_bytes)
+
+    return StreamingResponse(
+        generate_and_cache(),
+        media_type="audio/mpeg",
+        headers={"Cache-Control": "no-cache"},
+    )
