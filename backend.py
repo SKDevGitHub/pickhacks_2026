@@ -26,8 +26,8 @@ app.add_middleware(
 
 # ── Data loading ───────────────────────────────────────────────────────────────
 
-# Directory where city JSON files live (same folder as main.py by default)
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+# Directory where city JSON files live (same folder as main.py by default) they are in data/cities
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data", "cities")
 
 # Forecast CSV (per-intersection baseline, 2023-2050)
 FORECAST_CSV = os.path.join(os.path.dirname(__file__), "data", "forecast_per_intersection.csv")
