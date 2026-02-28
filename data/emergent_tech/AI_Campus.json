@@ -1,0 +1,15 @@
+{
+    "source": "https://www.datacenterknowledge.com/ai-hpc-training-campus-energy-water-impacts",
+    "power": {
+        "power_consumption": 600000000,
+        "avg_growth_rate": 3.5
+    },
+    "water": {
+        "water_consumption": 140000000,
+        "avg_growth_rate": 2.0
+    },
+    "air_pollution": {
+        "pm25_concentration": 2.0,
+        "avg_growth_rate": 1.6
+    }
+}
