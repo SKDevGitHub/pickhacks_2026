@@ -18,6 +18,9 @@ if len(sys.argv) > 1 and sys.argv[1] == "wipe":
     print("wiping db")
     with conn.cursor() as cursor:
         cursor.execute("""
+            DROP TABLE IF EXISTS green;
+        """)
+        cursor.execute("""
             DROP TABLE IF EXISTS city;
         """)
     conn.commit()
@@ -25,10 +28,26 @@ if len(sys.argv) > 1 and sys.argv[1] == "wipe":
 
 with conn.cursor() as cursor:
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS 
-        city (name TEXT NOT NULL, state TEXT NOT NULL, intersections INT, 
+        CREATE TABLE IF NOT EXISTS city (
+        name TEXT NOT NULL, state TEXT NOT NULL, intersections INT, 
         jsondata JSONB,
+
         PRIMARY KEY (name, state));
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS green (
+            id SERIAL PRIMARY KEY,
+            city TEXT NOT NULL, state TEXT NOT NULL,
+
+            year INT NOT NULL,
+            power_kwh DOUBLE PRECISION NOT NULL,
+            water_kgal DOUBLE PRECISION NOT NULL,
+            co2_kg DOUBLE PRECISION NOT NULL,
+
+            FOREIGN KEY (city, state) REFERENCES city(name, state)
+                ON DELETE CASCADE
+        );
     """)
 conn.commit()
 
@@ -56,6 +75,30 @@ def get_json(city: str, state: str) -> dict:
             return result[0]
         else:
             return {}
+
+def set_green(city: str, state: str, year: int, power_kwh: float, water_kgal: float, co2_kg: float):
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            INSERT INTO green (city, state, year, power_kwh, water_kgal, co2_kg)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (city, state, year)
+            DO UPDATE SET year = %s, power_kwh = %s, water_kgal = %s, co2_kg = %s
+        """, (city, state, year, power_kwh, water_kgal, co2_kg, year, power_kwh, water_kgal, co2_kg))
+    conn.commit()
+    
+def get_green(city: str, state: str) -> list:
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT
+                year, power_kwh, water_kgal, co2_kg
+                FROM green WHERE city = %s AND state = %s
+            ORDER BY year;
+        """, (city, state))
+        result = [list(row) for row in cursor.fetchall()]
+        if result:
+            return result
+        else:
+            return []
 
 def get_intersections(city: str, state: str) -> int:
     with conn.cursor() as cursor:

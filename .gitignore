@@ -18,3 +18,7 @@ node_modules/
 frontend/dist/
 _pycache__
 .vscode
+gaz/
+gaz/**
+**/gaz/**
+
