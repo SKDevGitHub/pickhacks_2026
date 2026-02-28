@@ -11,5 +11,6 @@
     "pollution": {
         "total_ghg_mt_co2e": 86209590.45,
         "avg_growth": 2.8
-    }
+    },
+    "intersections": 12500
 }
