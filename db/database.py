@@ -4,6 +4,7 @@ import os
 import atexit
 import sys
 import json
+import pandas
 load_dotenv()
 
 conn = psycopg.connect(
@@ -14,9 +15,12 @@ conn = psycopg.connect(
     port=5432
 )
 
-if len(sys.argv) > 1 and sys.argv[1] == "wipe":
-    print("wiping db")
+def wipe():
     with conn.cursor() as cursor:
+        cursor.execute("""
+            DROP TABLE IF EXISTS greenness;
+        """)
+        # old name
         cursor.execute("""
             DROP TABLE IF EXISTS green;
         """)
@@ -24,6 +28,11 @@ if len(sys.argv) > 1 and sys.argv[1] == "wipe":
             DROP TABLE IF EXISTS city;
         """)
     conn.commit()
+
+
+if len(sys.argv) > 1 and sys.argv[1] == "wipe":
+    print("wiping db")
+    wipe()
     sys.exit(0)
 
 with conn.cursor() as cursor:
@@ -36,13 +45,15 @@ with conn.cursor() as cursor:
     """)
 
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS green (
+        CREATE TABLE IF NOT EXISTS greenness (
+            technology TEXT NOT NULL,
             year INT NOT NULL,
+
             power_kwh DOUBLE PRECISION NOT NULL,
             water_kgal DOUBLE PRECISION NOT NULL,
             co2_kg DOUBLE PRECISION NOT NULL,
 
-            PRIMARY KEY (year)
+            PRIMARY KEY (technology, year)
         );
     """)
 conn.commit()
@@ -72,29 +83,36 @@ def get_json(city: str, state: str) -> dict:
         else:
             return {}
 
-def set_green(year: int, power_kwh: float, water_kgal: float, co2_kg: float):
+def set_greenness(technology: str, year: int, power_kwh: float, water_kgal: float, co2_kg: float):
     with conn.cursor() as cursor:
         cursor.execute("""
-            INSERT INTO green (year, power_kwh, water_kgal, co2_kg)
-            VALUES (%s, %s, %s, %s)
-            ON CONFLICT (year)
+            INSERT INTO greenness (technology, year, power_kwh, water_kgal, co2_kg)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (technology, year)
             DO UPDATE SET power_kwh = %s, water_kgal = %s, co2_kg = %s
-        """, (year, power_kwh, water_kgal, co2_kg, power_kwh, water_kgal, co2_kg))
+        """, (technology, year, power_kwh, water_kgal, co2_kg, power_kwh, water_kgal, co2_kg))
     conn.commit()
     
-def get_green() -> list:
+# Returns [[year, power, water, co2], ...]
+def get_greenness_all_years(technology: str) -> list[list]:
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT
                 year, power_kwh, water_kgal, co2_kg
-                FROM green
+                FROM greenness WHERE technology = %s
             ORDER BY year;
-        """)
+        """, (technology,))
         result = [list(row) for row in cursor.fetchall()]
         if result:
             return result
         else:
             return []
+
+def transfer_csv(technology: str, path: str):
+    csv = pandas.read_csv(path)
+    for _, row in csv.iterrows():
+        set_greenness(technology, int(row["year"]), int(row["power_kwh"]), int(row["water_kgal"]), int(row["co2_kg"]))
+    #     print(row["year"], row["power_kwh"], row["water_kgal"], row["co2_kg"])
 
 def get_intersections(city: str, state: str) -> int:
     with conn.cursor() as cursor:
@@ -118,3 +136,11 @@ def cache_intersections(city: str, state: str, intersections: int):
     conn.commit()
 
 atexit.register(conn.close)
+
+if __name__ == '__main__':
+    transfer_csv("intersections", "./data/forecast_per_intersection.csv")
+    print("... Intersections")
+    for i in get_greenness_all_years("intersections"):
+        for v in i:
+            print(v, end="\t")
+        print()
