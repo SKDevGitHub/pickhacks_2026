@@ -1,5 +1,5 @@
 {
-    "source" : "https://www.robotics.org/content-detail.cfm/Industrial-Robotics-Industry-Insights/Robotics-Market-Report-2024-2029/content_id/12345",
+    "source": "https://www.robotics.org/content-detail.cfm/Industrial-Robotics-Industry-Insights/Robotics-Market-Report-2024-2029/content_id/12345",
     "learn": {
         "description": "Industrial robotics uses programmable machines to automate repetitive, precise, or hazardous tasks.",
         "significance": "Automation demand is increasing across manufacturing and logistics as labor constraints and throughput requirements grow.",
@@ -16,5 +16,41 @@
     "air_pollution": {
         "pm25_concentration": 0.5,
         "avg_growth_rate": 0.2
+    },
+    "research_frequency": {
+        "2010": 0,
+        "2011": 0,
+        "2012": 0,
+        "2013": 2,
+        "2014": 0,
+        "2015": 0,
+        "2016": 0,
+        "2017": 0,
+        "2018": 3,
+        "2019": 3,
+        "2020": 2,
+        "2021": 0,
+        "2022": 0,
+        "2023": 0,
+        "2024": 0,
+        "2025": 0
+    },
+    "vc_frequency": {
+        "2010": 0,
+        "2011": 0,
+        "2012": 0,
+        "2013": 1,
+        "2014": 0,
+        "2015": 0,
+        "2016": 0,
+        "2017": 0,
+        "2018": 0,
+        "2019": 0,
+        "2020": 0,
+        "2021": 0,
+        "2022": 0,
+        "2023": 0,
+        "2024": 0,
+        "2025": 0
     }
 }
