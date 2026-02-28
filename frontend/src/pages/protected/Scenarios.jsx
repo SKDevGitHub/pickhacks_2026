@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../api';
-import TrajectoryChart from '../../components/TrajectoryChart';
+import TrajectoryChart from '../../components/charts/TrajectoryChart';
 
 export default function Scenarios() {
   const [technologies, setTechnologies] = useState([]);

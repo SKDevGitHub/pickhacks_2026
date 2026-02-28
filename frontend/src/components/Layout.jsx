@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import { canAccessGenerate, isEduEmail } from '../authz';
+import { canAccessGenerate, isEduEmail } from '../auth/authz';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },

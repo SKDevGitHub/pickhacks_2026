@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
-import AuthGuard from './components/AuthGuard';
+import AuthGuard from './auth/AuthGuard';
 import Layout from './components/Layout';
 import Forecasts from './pages/protected/Forecasts';
 import TechnologyDetail from './pages/protected/TechnologyDetail';
@@ -15,7 +15,7 @@ import About from './pages/public/About';
 import AskGemini from './pages/protected/AskGemini';
 import GenerateAuthBridge from './pages/public/GenerateAuthBridge';
 import NotFound from './pages/public/NotFound';
-import { canAccessGenerate, isEduEmail } from './authz';
+import { canAccessGenerate, isEduEmail } from './auth/authz';
 
 function Protected({ children }) {
   return <AuthGuard>{children}</AuthGuard>;
