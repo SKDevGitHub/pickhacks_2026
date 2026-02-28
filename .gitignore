@@ -1,5 +1,4 @@
 .env
-<<<<<<< HEAD
 *.env
 **/**.env
 */.env
@@ -17,3 +16,4 @@ __pycache__
 */*.pyc
 node_modules/
 _pycache__
+.vscode
