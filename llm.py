@@ -130,7 +130,7 @@ FINAL_ANSWER: <integer>
         print(f"err (prompt fail): {query}")
         return -1
 
-    print(f"\n\033[38;2;180;180;180m\n\n{query_text}\n\033[0m")
+    # print(f"\n\033[38;2;180;180;180m\n\n{query_text}\n\033[0m")
 
     query2 = chat(
         model="llama3.1:8b",
