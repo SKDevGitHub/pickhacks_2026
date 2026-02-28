@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { api } from '../../api';
 
 const CONCEPTS = [
@@ -21,6 +22,7 @@ const CONCEPTS = [
 ];
 
 export default function Learn() {
+  const { isAuthenticated } = useAuth0();
   const [technologies, setTechnologies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [petitionCounts, setPetitionCounts] = useState({});
@@ -213,18 +215,20 @@ export default function Learn() {
                   <span>Water {tech.water?.forecastIndex ?? '–'}</span>
                 </div>
 
-                <div className="learn-petition-row">
-                  <button
-                    className="btn-secondary learn-open-btn"
-                    onClick={() => openPetitionModal(tech)}
-                    disabled={Boolean(petitionedTechIds[tech.id])}
-                  >
-                    {petitionedTechIds[tech.id] ? 'Petition submitted' : 'Petition to bring to my city'}
-                  </button>
-                  <span className="learn-petition-count">
-                    {(petitionCounts[tech.id] || 0)} petitions
-                  </span>
-                </div>
+                {isAuthenticated && (
+                  <div className="learn-petition-row">
+                    <button
+                      className="btn-secondary learn-open-btn"
+                      onClick={() => openPetitionModal(tech)}
+                      disabled={Boolean(petitionedTechIds[tech.id])}
+                    >
+                      {petitionedTechIds[tech.id] ? 'Petition submitted' : 'Petition to bring to my city'}
+                    </button>
+                    <span className="learn-petition-count">
+                      {(petitionCounts[tech.id] || 0)} petitions
+                    </span>
+                  </div>
+                )}
               </article>
             ))}
           </div>

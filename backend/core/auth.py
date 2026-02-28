@@ -118,7 +118,7 @@ async def verify_token(
     except httpx.HTTPError:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Unable to verify credentials — Auth0 unreachable",
+            detail="Unable to verify credentials \u2014 Auth0 unreachable",
         )
 
 
