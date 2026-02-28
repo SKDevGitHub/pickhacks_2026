@@ -18,10 +18,10 @@ if len(sys.argv) > 1 and sys.argv[1] == "wipe":
     print("wiping db")
     with conn.cursor() as cursor:
         cursor.execute("""
-            DROP TABLE IF EXISTS city;
+            DROP TABLE IF EXISTS green;
         """)
         cursor.execute("""
-            DROP TABLE IF EXISTS green;
+            DROP TABLE IF EXISTS city;
         """)
     conn.commit()
     sys.exit(0)
@@ -82,8 +82,8 @@ def set_green(city: str, state: str, year: int, power_kwh: float, water_kgal: fl
             INSERT INTO green (city, state, year, power_kwh, water_kgal, co2_kg)
             VALUES (%s, %s, %s, %s, %s, %s)
             ON CONFLICT (city, state, year)
-            DO UPDATE SET power_kwh = %s, water_kgal = %s, co2_kg = %s
-        """, (city, state, year, power_kwh, water_kgal, co2_kg, power_kwh, water_kgal, co2_kg))
+            DO UPDATE SET year = %s, power_kwh = %s, water_kgal = %s, co2_kg = %s
+        """, (city, state, year, power_kwh, water_kgal, co2_kg, year, power_kwh, water_kgal, co2_kg))
     conn.commit()
     
 def get_green(city: str, state: str) -> list:

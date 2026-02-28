@@ -17,3 +17,7 @@ __pycache__
 node_modules/
 _pycache__
 .vscode
+gaz/
+gaz/**
+**/gaz/**
+
