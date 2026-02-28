@@ -25,7 +25,11 @@ state_abbrev_to_fips = {
     "VA": "51", "WA": "53", "WV": "54", "WI": "55", "WY": "56"
 }
 
+# This is no longer "LLM" use, but it will remain here
 def intersections(city: str, state: str) -> int:
+    if city == "St. Louis" and state.upper() == "IL":
+        state = "MO"
+
     if db.get_intersections(city, state) != -1:
         print(f"cached data for {city}, {state} found")
         return db.get_intersections(city, state)
@@ -42,7 +46,8 @@ def intersections(city: str, state: str) -> int:
     popdata = popdata.json()
     c = None
     for row in popdata[1:]:
-        if f"{city} city" in row[0]:
+        # if f"{city} city" in row[0]:
+        if row[0].split(",")[0].strip().lower() == f"{city.lower()} city":
             c = row
             break
 
@@ -59,62 +64,65 @@ def intersections(city: str, state: str) -> int:
     print(gaz_df[gaz_df["NAME"].str.contains(f"{city}", case=False)])
     city_row = gaz_df[
         (gaz_df["USPS"] == state.upper()) &
-        (gaz_df["NAME"].str.lower().str.startswith(city.lower()))
+        (gaz_df["NAME"].str.lower() == f"{city.lower()} city")
     ]
-
+    
     if city_row.empty:
         raise Exception(f"City {city} not found in GAZ")
 
-    land_area = float(city_row.iloc[0]["ALAND"]) / 2589988
+    land_area = (float(city_row.iloc[0]["ALAND"])) / 2589988
 
-    print(f"No cache for {city}, {state} -> calling LLM")
-    query = chat(
-        model="llama3.1:8b",
-        messages=[
-            {
-                "role": "system",
-                "content": "You are a quantitative urban infrastructure estimation assistant. Perform explicit arithmetic reasoning. Do not invent placeholder values"
-            },
-            {
-                "role": "user",
-                "content": f"""
-City: {city}
-State: {state}
-Population: {pop}
-Land area: {land_area} sq mi
+    print(f"No cache for {city}, {state} -> calculating")
+    # No point using LLM at this point because its devolved into basically arithmetic alone
 
-We know:
-New York City has:
-- Population: 8,622,467
-- Land area: 302.64 sq mi
-- 13,543 signalized intersections
 
-Steps:
-
-1) Compute NYC population density.
-2) Compute target city population density.
-3) Compute NYC signal density:
-   nyc_signal_density = 13,543 / 302.64
-
-4) Assume signal density scales proportionally with population density:
-   city_signal_density =
-   (city_density / nyc_density) × nyc_signal_density
-
-5) Compute:
-   total_intersections =
-   city_signal_density × land_area
-
-6) Round to nearest integer.
-
-Show calculations clearly.
-
-End with:
-FINAL_ANSWER: <integer>
-                """
-            }
-        ],
-        options={"temperature": 0.15}
-    )
+#     query = chat(
+#         model="llama3.1:8b",
+#         messages=[
+#             {
+#                 "role": "system",
+#                 "content": "You are a quantitative urban infrastructure estimation assistant. Perform explicit arithmetic reasoning. Do not invent placeholder values"
+#             },
+#             {
+#                 "role": "user",
+#                 "content": f"""
+# City: {city}
+# State: {state}
+# Population: {pop}
+# Land area: {land_area} sq mi
+#
+# We know:
+# New York City has:
+# - Population: 8,622,467
+# - Land area: 302.64 sq mi
+# - 13,543 signalized intersections
+#
+# Steps:
+#
+# 1) Compute NYC population density.
+# 2) Compute target city population density.
+# 3) Compute NYC signal density:
+#    nyc_signal_density = 13,543 / 302.64
+#
+# 4) Assume signal density scales proportionally with population density:
+#    city_signal_density =
+#    (city_density / nyc_density) × nyc_signal_density
+#
+# 5) Compute:
+#    total_intersections =
+#    city_signal_density × land_area
+#
+# 6) Round to nearest integer.
+#
+# Show calculations clearly.
+#
+# End with:
+# FINAL_ANSWER: <integer>
+#                 """
+#             }
+#         ],
+#         options={"temperature": 0.15}
+#     )
     # query = gemini.models.generate_content(
     #     model="gemini-2.5-flash",
     #     # contents=f"Based on urban planning data for {city}, {state}, {country}, what is the approximate total number of street intersections within the city limits? Provide your best statistical estimate as a single integer. Do not return a range or text. If unknown, return -1.",
@@ -125,39 +133,60 @@ FINAL_ANSWER: <integer>
     #     )
     # )
 
-    query_text = query["message"]["content"]
-    if not query_text:
-        print(f"err (prompt fail): {query}")
-        return -1
+    # query_text = query["message"]["content"]
+    # if not query_text:
+    #     print(f"err (prompt fail): {query}")
+    #     return -1
 
     # print(f"\n\033[38;2;180;180;180m\n\n{query_text}\n\033[0m")
 
-    query2 = chat(
-        model="llama3.1:8b",
-        messages=[
-            {
-                "role": "system",
-                "content": "Extract only the integer that appears after \'FINAL_ANSWER:\' in the previous message. Output only digits. If there is nothing, output -1."
-            },
-            {
-                "role": "user",
-                "content": query_text
-            }
-        ],
-        options={"temperature": 0.0}
-    )
-    query_text = query2["message"]["content"]
-    if not query_text:
-        print(f"err (extract fail): {query2}")
-        return -1
+    # query2 = chat(
+    #     model="llama3.1:8b",
+    #     messages=[
+    #         {
+    #             "role": "system",
+    #             "content": "Extract only the integer that appears after \'FINAL_ANSWER:\' in the previous message. Output only digits. If there is nothing, output -1."
+    #         },
+    #         {
+    #             "role": "user",
+    #             "content": query_text
+    #         }
+    #     ],
+    #     options={"temperature": 0.0}
+    # )
+    # query_text = query2["message"]["content"]
+    # if not query_text:
+    #     print(f"err (extract fail): {query2}")
+    #     return -1
+    #
+    # x = re.search(r'\d+', query_text.replace(',', ''))
+    # if x and int(x.group()) > 10:
+    #     db.cache_intersections(city, state, int(x.group()))
+    #     return int(x.group())
+    # else:
+    #     print(f"err: {query}")
+    #     return -1
 
-    x = re.search(r'\d+', query_text.replace(',', ''))
-    if x and int(x.group()) > 10:
-        db.cache_intersections(city, state, int(x.group()))
-        return int(x.group())
+    density = float(pop) / land_area
+    if density < 1500:
+        spm = 1.2
+    elif density < 3000:
+        spm = 2.0
+    elif density < 5000:
+        spm = 3.0
+    elif density < 8000:
+        spm = 5.0
+    elif density < 12000:
+        spm = 8.0
+    elif density < 20000:
+        spm = 15.2
     else:
-        print(f"err: {query}")
-        return -1
+        spm = 40.2
+
+    print(f"{city}: density {density}, spm {spm} -> {round(int(spm * land_area))}")
+
+    db.cache_intersections(city, state, round(int(spm * land_area)))
+    return round(spm * land_area)
 
 if __name__ == '__main__':
     print("running tests:")
@@ -165,4 +194,7 @@ if __name__ == '__main__':
     print(f"phoenix intersections: {intersections('Phoenix', 'AZ')}")
     print(f"rolla intersections: {intersections('Rolla', 'MO')}")
     print(f"chicago intersections: {intersections('Chicago', 'IL')}")
-    print(f" intersections: {intersections('Los Angeles', 'CA')}")
+    print(f"tulsa intersections: {intersections('Tulsa', 'OK')}")
+    print(f"springfield (mo) intersections: {intersections('Springfield', 'MO')}")
+    print(f"stl/mo intersections: {intersections('St. Louis', 'MO')}")
+    print(f"la intersections: {intersections('Los Angeles', 'CA')}")

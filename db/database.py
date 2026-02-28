@@ -38,10 +38,11 @@ if len(sys.argv) > 1 and sys.argv[1] == "wipe":
 with conn.cursor() as cursor:
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS city (
-        name TEXT NOT NULL, state TEXT NOT NULL, intersections INT, 
-        jsondata JSONB,
+            name TEXT NOT NULL, state TEXT NOT NULL, intersections INT, 
+            jsondata JSONB,
 
-        PRIMARY KEY (name, state));
+            PRIMARY KEY (name, state)
+        );
     """)
 
     cursor.execute("""
