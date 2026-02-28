@@ -8,9 +8,10 @@ import json
 from typing import Optional
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+from auth import verify_token
 
 from data.technologies import (
     CATEGORIES,
@@ -310,6 +311,16 @@ async def simulate_scenario(
                 "cubicMetersYear": tech["water"]["cubicMetersYear"],
             },
         },
+    }
+
+
+@app.get("/api/me")
+async def get_current_user(token_payload: dict = Depends(verify_token)):
+    """Protected route — returns the authenticated user's token payload."""
+    return {
+        "sub": token_payload.get("sub"),
+        "email": token_payload.get("email"),
+        "permissions": token_payload.get("permissions", []),
     }
 
 

@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
@@ -17,6 +18,7 @@ const MOBILE_ICONS = {
 };
 
 export default function Layout({ children }) {
+  const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
   const location = useLocation();
 
   return (
@@ -44,7 +46,41 @@ export default function Layout({ children }) {
             ))}
           </div>
 
-          <div className="nav-auth" />
+          <div className="nav-auth">
+            {isAuthenticated ? (
+              <div className="nav-user">
+                {user?.picture && (
+                  <img
+                    src={user.picture}
+                    alt=""
+                    className="nav-avatar"
+                  />
+                )}
+                <span className="nav-user-name">{user?.name}</span>
+                <button
+                  className="btn-auth btn-logout"
+                  onClick={() =>
+                    logout({ logoutParams: { returnTo: window.location.origin } })
+                  }
+                >
+                  Log out
+                </button>
+              </div>
+            ) : (
+              <button
+                className="btn-auth btn-login"
+                onClick={() =>
+                  loginWithRedirect({
+                    appState: {
+                      returnTo: `${location.pathname}${location.search}${location.hash}`,
+                    },
+                  })
+                }
+              >
+                Sign in
+              </button>
+            )}
+          </div>
         </div>
       </nav>
 
