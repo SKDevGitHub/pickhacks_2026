@@ -17,7 +17,6 @@ export default function Login() {
         padding: 'var(--sp-6)',
       }}
     >
-      {/* Brand mark */}
       <div
         style={{
           display: 'flex',
@@ -48,7 +47,6 @@ export default function Login() {
         </span>
       </div>
 
-      {/* Login card */}
       <div
         style={{
           width: '100%',

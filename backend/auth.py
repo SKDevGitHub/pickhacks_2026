@@ -5,7 +5,6 @@ Validates access tokens issued by Auth0 for the Tech Signals API.
 
 import os
 from typing import Optional
-from functools import lru_cache
 
 import httpx
 from fastapi import Depends, HTTPException, status
@@ -30,6 +29,7 @@ async def get_jwks() -> dict:
     global _jwks_cache
     if _jwks_cache is not None:
         return _jwks_cache
+
     jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
     async with httpx.AsyncClient() as client:
         response = await client.get(jwks_url)
@@ -41,10 +41,7 @@ async def get_jwks() -> dict:
 async def verify_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> dict:
-    """
-    Verify the Auth0 JWT access token.
-    Returns the decoded token payload.
-    """
+    """Verify the Auth0 JWT access token and return its payload."""
     if credentials is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -85,10 +82,10 @@ async def verify_token(
         )
         return payload
 
-    except JWTError as e:
+    except JWTError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token validation failed: {str(e)}",
+            detail=f"Token validation failed: {str(err)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except httpx.HTTPError:
@@ -96,19 +93,3 @@ async def verify_token(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Unable to verify credentials — Auth0 unreachable",
         )
-
-
-async def optional_verify_token(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-) -> Optional[dict]:
-    """
-    Optionally verify a token — returns None if no token provided
-    instead of raising an error. Useful for public endpoints that
-    optionally personalize content.
-    """
-    if credentials is None:
-        return None
-    try:
-        return await verify_token(credentials)
-    except HTTPException:
-        return None

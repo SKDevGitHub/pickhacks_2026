@@ -8,7 +8,6 @@ import Scenarios from './pages/Scenarios';
 import Explorer from './pages/Explorer';
 import About from './pages/About';
 
-// Thin wrapper — redirects to login only for intelligence pages
 function Protected({ children }) {
   return <AuthGuard>{children}</AuthGuard>;
 }
@@ -17,10 +16,8 @@ export default function App() {
   return (
     <Layout>
       <Routes>
-        {/* Public */}
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        {/* Protected */}
         <Route path="/forecasts" element={<Protected><Forecasts /></Protected>} />
         <Route path="/forecasts/:techId" element={<Protected><TechnologyDetail /></Protected>} />
         <Route path="/scenarios" element={<Protected><Scenarios /></Protected>} />

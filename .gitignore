@@ -15,6 +15,7 @@ __pycache__
 **/**.pyc
 */*.pyc
 node_modules/
+frontend/dist/
 _pycache__
 .vscode
 gaz/

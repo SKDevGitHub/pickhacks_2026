@@ -3,6 +3,9 @@ Comprehensive mock technology data for the Tech Signals platform.
 Each technology includes Power, Pollution, and Water forecast dimensions.
 """
 
+import csv
+import json
+import os
 import random
 import math
 
@@ -38,6 +41,151 @@ def _trajectory(base, trend=0.5, n_hist=24, n_proj=36):
         })
 
     return {"historical": historical, "projected": projected}
+
+
+def _csv_forecast_path():
+    """Resolve CSV path from repo root and provide a backend-local fallback."""
+    current_dir = os.path.dirname(__file__)
+    repo_root = os.path.dirname(os.path.dirname(current_dir))
+    primary = os.path.join(repo_root, "data", "forecast_per_intersection.csv")
+    fallback = os.path.join(os.path.dirname(current_dir), "data", "forecast_per_intersection.csv")
+    return primary if os.path.exists(primary) else fallback
+
+
+def _new_york_timeseries_path():
+    """Resolve merged New York city + timeseries JSON path."""
+    current_dir = os.path.dirname(__file__)
+    repo_root = os.path.dirname(os.path.dirname(current_dir))
+    return os.path.join(repo_root, "data", "cities", "new_york_timeseries.json")
+
+
+def _load_forecast_rows_from_new_york_json():
+    """Load normalized forecast rows from merged New York time-series JSON."""
+    path = _new_york_timeseries_path()
+    if not os.path.exists(path):
+        return []
+
+    try:
+        with open(path, "r", encoding="utf-8") as file_handle:
+            payload = json.load(file_handle)
+    except (OSError, json.JSONDecodeError):
+        return []
+
+    series = payload.get("time_series", [])
+    rows = []
+    for row in series:
+        try:
+            rows.append(
+                {
+                    "year": int(row["year"]),
+                    "power_kwh": float(row["power_kwh"]),
+                    "water_kgal": float(row["water_kgal"]),
+                    "co2_kg": float(row["co2_kg"]),
+                    "data_type": str(row["data_type"]).strip().lower(),
+                    "scenario": str(row.get("scenario", "")).strip().lower(),
+                    "confidence": float(row.get("confidence", 1.0) or 1.0),
+                }
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+
+    rows.sort(key=lambda item: item["year"])
+    return rows
+
+
+def _load_forecast_rows():
+    """Load forecast rows from merged New York JSON, falling back to CSV."""
+    json_rows = _load_forecast_rows_from_new_york_json()
+    if json_rows:
+        return json_rows
+
+    path = _csv_forecast_path()
+    if not os.path.exists(path):
+        return []
+
+    rows = []
+    with open(path, newline="", encoding="utf-8") as file_handle:
+        reader = csv.DictReader(file_handle)
+        for row in reader:
+            try:
+                rows.append(
+                    {
+                        "year": int(row["year"]),
+                        "power_kwh": float(row["power_kwh"]),
+                        "water_kgal": float(row["water_kgal"]),
+                        "co2_kg": float(row["co2_kg"]),
+                        "data_type": row["data_type"].strip().lower(),
+                        "scenario": row.get("scenario", "").strip().lower(),
+                        "confidence": float(row.get("confidence", 1.0) or 1.0),
+                    }
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+
+    rows.sort(key=lambda item: item["year"])
+    return rows
+
+
+def _build_series_from_csv(value_key):
+    """
+    Build trajectory series from CSV values.
+    - historical: observed values up to last historical year
+    - projected: forecast values with confidence-derived bands
+    """
+    rows = _load_forecast_rows()
+    if not rows:
+        return None
+
+    historical_rows = [row for row in rows if row["data_type"] == "historical"]
+    forecast_rows = [row for row in rows if row["data_type"] == "forecast"]
+
+    if not historical_rows or not forecast_rows:
+        return None
+
+    reference_year = max(row["year"] for row in historical_rows)
+
+    historical = [
+        {
+            "month": (row["year"] - reference_year) * 12,
+            "value": round(row[value_key], 2),
+        }
+        for row in historical_rows
+    ]
+
+    projected = []
+    for row in forecast_rows:
+        value = row[value_key]
+        confidence = max(0.0, min(1.0, row["confidence"]))
+        margin = max(1.0, value * (1.0 - confidence))
+        projected.append(
+            {
+                "month": (row["year"] - reference_year) * 12,
+                "value": round(value, 2),
+                "upper": round(value + margin, 2),
+                "lower": round(max(0.0, value - margin), 2),
+            }
+        )
+
+    return {"historical": historical, "projected": projected}
+
+
+def _scale_csv_series(series, multiplier):
+    """Scale baseline CSV trajectory per technology while preserving shape."""
+    return {
+        "historical": [
+            {"month": point["month"], "value": round(point["value"] * multiplier, 2)}
+            for point in series.get("historical", [])
+        ],
+        "projected": [
+            {
+                "month": point["month"],
+                "value": round(point["value"] * multiplier, 2),
+                "upper": round(point["upper"] * multiplier, 2),
+                "lower": round(point["lower"] * multiplier, 2),
+            }
+            for point in series.get("projected", [])
+        ],
+    }
 
 
 CATEGORIES = [
@@ -497,6 +645,11 @@ CATEGORIES = [
 
 # Pre-generate trajectory data for each technology
 def _build_trajectory_cache():
+    csv_power = _build_series_from_csv("power_kwh")
+    csv_pollution = _build_series_from_csv("co2_kg")
+    csv_water = _build_series_from_csv("water_kgal")
+
+    use_csv = csv_power and csv_pollution and csv_water
     cache = {}
     for cat in CATEGORIES:
         for tech in cat["technologies"]:
@@ -504,11 +657,22 @@ def _build_trajectory_cache():
             p_base = tech["power"]["forecastIndex"]
             pol_base = tech["pollution"]["forecastIndex"]
             w_base = tech["water"]["forecastIndex"]
-            cache[tid] = {
-                "power": _trajectory(p_base * 0.6, trend=tech["power"]["delta"] / 12),
-                "pollution": _trajectory(pol_base * 0.6, trend=tech["pollution"]["delta"] / 12),
-                "water": _trajectory(w_base * 0.6, trend=tech["water"]["delta"] / 12),
-            }
+
+            if use_csv:
+                power_scale = max(0.25, p_base / 70)
+                pollution_scale = max(0.25, pol_base / 70)
+                water_scale = max(0.25, w_base / 70)
+                cache[tid] = {
+                    "power": _scale_csv_series(csv_power, power_scale),
+                    "pollution": _scale_csv_series(csv_pollution, pollution_scale),
+                    "water": _scale_csv_series(csv_water, water_scale),
+                }
+            else:
+                cache[tid] = {
+                    "power": _trajectory(p_base * 0.6, trend=tech["power"]["delta"] / 12),
+                    "pollution": _trajectory(pol_base * 0.6, trend=tech["pollution"]["delta"] / 12),
+                    "water": _trajectory(w_base * 0.6, trend=tech["water"]["delta"] / 12),
+                }
     return cache
 
 

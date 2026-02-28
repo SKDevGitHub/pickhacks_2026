@@ -22,6 +22,7 @@ export const api = {
   technology: (id) => fetchJSON(`/technologies/${id}`),
   alerts: () => fetchJSON('/alerts'),
   regions: () => fetchJSON('/regions'),
+  cities: () => fetchJSON('/cities'),
   simulate: (params) => {
     const qs = new URLSearchParams(params).toString();
     return fetchJSON(`/scenarios/simulate?${qs}`);

@@ -7,15 +7,10 @@ import './index.css';
 
 const domain = import.meta.env.VITE_AUTH0_DOMAIN;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
+const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 
 function onRedirectCallback(appState) {
-  // After login, send users to the page they were trying to reach
-  // (or home if none stored).
-  window.history.replaceState(
-    {},
-    document.title,
-    appState?.returnTo ?? '/'
-  );
+  window.history.replaceState({}, document.title, appState?.returnTo ?? '/');
 }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -27,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         authorizationParams={{
           redirect_uri: window.location.origin,
           scope: 'openid profile email',
+          ...(audience ? { audience } : {}),
         }}
         onRedirectCallback={onRedirectCallback}
         cacheLocation="localstorage"
