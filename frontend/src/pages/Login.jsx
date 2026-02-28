@@ -1,7 +1,9 @@
 import { useAuth0 } from '@auth0/auth0-react';
+import { useLocation } from 'react-router-dom';
 
 export default function Login() {
   const { loginWithRedirect, isLoading } = useAuth0();
+  const location = useLocation();
 
   return (
     <div
@@ -93,7 +95,13 @@ export default function Login() {
 
         <button
           disabled={isLoading}
-          onClick={() => loginWithRedirect()}
+          onClick={() =>
+            loginWithRedirect({
+              appState: {
+                returnTo: `${location.pathname}${location.search}${location.hash}`,
+              },
+            })
+          }
           style={{
             width: '100%',
             height: 44,

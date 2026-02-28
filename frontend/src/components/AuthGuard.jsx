@@ -1,4 +1,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Login from '../pages/Login';
 
 /**
@@ -6,7 +8,18 @@ import Login from '../pages/Login';
  * the Login page if unauthenticated, or the children if authenticated.
  */
 export default function AuthGuard({ children }) {
-  const { isLoading, isAuthenticated } = useAuth0();
+  const { isLoading, isAuthenticated, loginWithRedirect } = useAuth0();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      loginWithRedirect({
+        appState: {
+          returnTo: `${location.pathname}${location.search}${location.hash}`,
+        },
+      });
+    }
+  }, [isLoading, isAuthenticated, loginWithRedirect, location.pathname, location.search, location.hash]);
 
   if (isLoading) {
     return (

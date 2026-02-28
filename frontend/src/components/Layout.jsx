@@ -69,7 +69,13 @@ export default function Layout({ children }) {
             ) : (
               <button
                 className="btn-auth btn-login"
-                onClick={() => loginWithRedirect()}
+                onClick={() =>
+                  loginWithRedirect({
+                    appState: {
+                      returnTo: `${location.pathname}${location.search}${location.hash}`,
+                    },
+                  })
+                }
               >
                 Sign in
               </button>
