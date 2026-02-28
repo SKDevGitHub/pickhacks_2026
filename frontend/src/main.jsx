@@ -7,7 +7,6 @@ import './index.css';
 
 const domain = import.meta.env.VITE_AUTH0_DOMAIN;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 
 function onRedirectCallback(appState) {
   // After login, send users to the page they were trying to reach
@@ -27,7 +26,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         clientId={clientId}
         authorizationParams={{
           redirect_uri: window.location.origin,
-          audience: audience,
           scope: 'openid profile email',
         }}
         onRedirectCallback={onRedirectCallback}
