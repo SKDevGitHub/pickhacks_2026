@@ -139,6 +139,21 @@ export default function NewsArticle() {
       </div>
 
       <article className="news-detail-card">
+        {article.image?.url && (
+          <div className="news-hero-wrap">
+            <img className="news-hero-image" src={article.image.url} alt={article.title} />
+            <p className="news-hero-credit">
+              {article.image.provider || 'Image source'}
+              {article.image.license ? ` · ${article.image.license}` : ''}
+              {article.image.sourcePage && (
+                <>
+                  {' '}· <a href={article.image.sourcePage} target="_blank" rel="noreferrer">source</a>
+                </>
+              )}
+            </p>
+          </div>
+        )}
+
         <div className="news-card-meta">
           <span className="news-timestamp">{new Date(article.generatedAt).toLocaleString()}</span>
           {article.tags?.length > 0 && (
@@ -175,6 +190,23 @@ export default function NewsArticle() {
           className="news-content"
           dangerouslySetInnerHTML={{ __html: markdownToHtml(article.content) }}
         />
+
+        {article.sources?.length > 0 && (
+          <section className="news-sources">
+            <h3>Sources</h3>
+            <ul>
+              {article.sources.map((source, idx) => (
+                <li key={`${source.url || source.title}-${idx}`}>
+                  <a href={source.url || '#'} target="_blank" rel="noreferrer">
+                    [{idx + 1}] {source.title}
+                  </a>
+                  {source.publisher ? ` — ${source.publisher}` : ''}
+                  {source.publishedAt ? ` (${new Date(source.publishedAt).toLocaleDateString()})` : ''}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </article>
     </div>
   );
