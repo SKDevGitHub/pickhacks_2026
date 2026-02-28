@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
 import { api } from '../../api';
@@ -9,11 +9,8 @@ export default function NewsArticle() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
-  const [audioLoading, setAudioLoading] = useState(false);
-  const [audioError, setAudioError] = useState('');
-  const [audioRetryAtMs, setAudioRetryAtMs] = useState(0);
-  const [nowMs, setNowMs] = useState(Date.now());
-  const audioRef = useRef(null);
+  const [audioLoading, setAudioLoading] = useState(true);
+  const [audioUnavailable, setAudioUnavailable] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -24,88 +21,33 @@ export default function NewsArticle() {
       .finally(() => setLoading(false));
   }, [articleId]);
 
+  /* Auto-fetch audio for published articles */
   useEffect(() => {
-    return () => {
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
+    if (!articleId) return;
+    let cancelled = false;
+
+    (async () => {
+      setAudioLoading(true);
+      setAudioUnavailable(false);
+      try {
+        const res = await fetch(`/api/articles/${articleId}/audio`);
+        if (!res.ok) throw new Error('unavailable');
+        const blob = await res.blob();
+        if (cancelled) return;
+        setAudioUrl((prev) => { if (prev) URL.revokeObjectURL(prev); return URL.createObjectURL(blob); });
+      } catch {
+        if (!cancelled) setAudioUnavailable(true);
+      } finally {
+        if (!cancelled) setAudioLoading(false);
       }
-    };
+    })();
+
+    return () => { cancelled = true; };
+  }, [articleId]);
+
+  useEffect(() => {
+    return () => { if (audioUrl) URL.revokeObjectURL(audioUrl); };
   }, [audioUrl]);
-
-  useEffect(() => {
-    if (!audioRetryAtMs) return;
-
-    const timer = window.setInterval(() => {
-      setNowMs(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(timer);
-  }, [audioRetryAtMs]);
-
-  function parseRetryAtMs(detailText) {
-    const raw = String(detailText || '');
-    const match = raw.match(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2} UTC)/);
-    if (!match) return 0;
-
-    const normalized = match[1].replace(' UTC', '').replace(' ', 'T') + ':00Z';
-    const ts = Date.parse(normalized);
-    return Number.isNaN(ts) ? 0 : ts;
-  }
-
-  function formatRemaining(msRemaining) {
-    if (msRemaining <= 0) return 'now';
-
-    const totalSeconds = Math.ceil(msRemaining / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
-    if (minutes > 0) return `${minutes}m ${seconds}s`;
-    return `${seconds}s`;
-  }
-
-  async function handleGenerateAudio() {
-    if (audioUrl) {
-      if (audioRef.current) {
-        audioRef.current.play().catch(() => {});
-      }
-      return;
-    }
-
-    setAudioError('');
-    setAudioRetryAtMs(0);
-    setAudioLoading(true);
-    try {
-      const res = await fetch(`/api/articles/${articleId}/audio`);
-      if (!res.ok) {
-        let detail = '';
-        try {
-          const payload = await res.json();
-          detail = payload?.detail || '';
-          const retryTs = parseRetryAtMs(detail);
-          if (retryTs) {
-            setAudioRetryAtMs(retryTs);
-            setNowMs(Date.now());
-          }
-        } catch {
-          detail = '';
-        }
-        throw new Error(detail || `Audio request failed (${res.status})`);
-      }
-
-      const blob = await res.blob();
-      const nextUrl = URL.createObjectURL(blob);
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-      }
-      setAudioUrl(nextUrl);
-    } catch (err) {
-      setAudioError(err.message || 'Unable to generate narration.');
-    } finally {
-      setAudioLoading(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -166,21 +108,10 @@ export default function NewsArticle() {
         </div>
 
         <div className="news-audio-block">
-          <button
-            className="btn-secondary"
-            onClick={handleGenerateAudio}
-            disabled={audioLoading || (audioRetryAtMs > nowMs)}
-          >
-            {audioLoading ? 'Generating audio…' : audioUrl ? 'Play audio' : 'Listen with ElevenLabs'}
-          </button>
-          {audioError && <p className="news-audio-error">{audioError}</p>}
-          {audioRetryAtMs > nowMs && (
-            <p className="news-audio-retry">
-              TTS temporarily unavailable. Retry in {formatRemaining(audioRetryAtMs - nowMs)}.
-            </p>
-          )}
+          {audioLoading && <p className="news-audio-loading">Loading audio…</p>}
+          {audioUnavailable && <p className="news-audio-error">Audio unavailable</p>}
           {audioUrl && (
-            <audio controls className="news-audio-player" ref={audioRef}>
+            <audio controls className="news-audio-player">
               <source src={audioUrl} type="audio/mpeg" />
             </audio>
           )}

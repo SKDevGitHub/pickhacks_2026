@@ -29,6 +29,8 @@ export default function GenerateAdmin() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [statusTarget, setStatusTarget] = useState(null);
+  const [statusChanging, setStatusChanging] = useState(false);
 
   const filteredHistory = history.filter((article) => {
     if (statusFilter === 'all') return true;
@@ -194,8 +196,36 @@ export default function GenerateAdmin() {
     }
   }
 
+  function openStatusModal(article, status) {
+    setStatusTarget({
+      id: article.id,
+      title: article.title || 'Untitled article',
+      status,
+    });
+  }
+
+  function closeStatusModal() {
+    if (statusChanging) return;
+    setStatusTarget(null);
+  }
+
+  async function confirmStatusChange() {
+    if (!statusTarget?.id || !statusTarget?.status) return;
+    setStatusChanging(true);
+    try {
+      await handleSetStatus(statusTarget.id, statusTarget.status);
+      setStatusTarget(null);
+    } finally {
+      setStatusChanging(false);
+    }
+  }
+
   function openDeleteModal(article) {
-    setDeleteTarget(article);
+    const isPublished = (article?.status || 'draft') === 'published';
+    setDeleteTarget({
+      ...article,
+      blocked: isPublished,
+    });
   }
 
   function closeDeleteModal() {
@@ -204,7 +234,7 @@ export default function GenerateAdmin() {
   }
 
   async function confirmDeleteArticle() {
-    if (!deleteTarget?.id) return;
+    if (!deleteTarget?.id || deleteTarget?.blocked) return;
     setError(null);
     setDeleting(true);
     const articleId = deleteTarget.id;
@@ -220,7 +250,10 @@ export default function GenerateAdmin() {
       await api.deleteArticle(articleId, token);
       setDeleteTarget(null);
     } catch (err) {
-      if (err?.message === AUTH_REDIRECTING) return;
+      if (err?.message === AUTH_REDIRECTING) {
+        setHistory(previousHistory);
+        return;
+      }
       setHistory(previousHistory);
       setError(err.message || 'Failed to delete article');
     } finally {
@@ -354,14 +387,14 @@ export default function GenerateAdmin() {
                   {a.status === 'published' ? (
                     <button
                       className="btn-secondary gen-edit-btn"
-                      onClick={() => handleSetStatus(a.id, 'draft')}
+                      onClick={() => openStatusModal(a, 'draft')}
                     >
                       Move to draft
                     </button>
                   ) : (
                     <button
                       className="btn-primary gen-edit-btn"
-                      onClick={() => handleSetStatus(a.id, 'published')}
+                      onClick={() => openStatusModal(a, 'published')}
                     >
                       Publish
                     </button>
@@ -379,22 +412,62 @@ export default function GenerateAdmin() {
         )}
       </section>
 
+      {statusTarget && (
+        <div className="gen-modal-overlay" onClick={closeStatusModal}>
+          <section className="gen-editor gen-modal gen-delete-modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="section-title">Confirm {statusTarget.status === 'published' ? 'Publish' : 'Move to Draft'}</h2>
+            <p className="page-subtitle">
+              <strong>{statusTarget.title}</strong>
+            </p>
+            {statusTarget.status === 'published' ? (
+              <p className="page-subtitle">Publishing will generate and cache an ElevenLabs audio narration.</p>
+            ) : (
+              <p className="page-subtitle">Moving to draft will remove the cached ElevenLabs audio narration.</p>
+            )}
+
+            <div className="gen-editor-actions">
+              <button className="btn-secondary" onClick={closeStatusModal} disabled={statusChanging}>
+                Cancel
+              </button>
+              <button className="btn-primary" onClick={confirmStatusChange} disabled={statusChanging}>
+                {statusChanging
+                  ? (statusTarget.status === 'published' ? 'Publishing…' : 'Updating…')
+                  : (statusTarget.status === 'published' ? 'Confirm Publish' : 'Confirm Move to Draft')}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {deleteTarget && (
         <div className="gen-modal-overlay" onClick={closeDeleteModal}>
           <section className="gen-editor gen-modal gen-delete-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="section-title">Delete Article</h2>
-            <p className="page-subtitle">
-              This will permanently delete <strong>{deleteTarget.title}</strong>.
-            </p>
-            <p className="page-subtitle">This action cannot be undone.</p>
+            <h2 className="section-title">{deleteTarget.blocked ? 'Cannot Delete Published Article' : 'Delete Article'}</h2>
+            {deleteTarget.blocked ? (
+              <>
+                <p className="page-subtitle">
+                  <strong>{deleteTarget.title}</strong> is currently published.
+                </p>
+                <p className="page-subtitle">Move it to draft first. This will also delete its cached audio file.</p>
+              </>
+            ) : (
+              <>
+                <p className="page-subtitle">
+                  This will permanently delete <strong>{deleteTarget.title}</strong>.
+                </p>
+                <p className="page-subtitle">This will also delete its cached audio file and cannot be undone.</p>
+              </>
+            )}
 
             <div className="gen-editor-actions">
               <button className="btn-secondary" onClick={closeDeleteModal} disabled={deleting}>
-                Cancel
+                {deleteTarget.blocked ? 'Okay' : 'Cancel'}
               </button>
-              <button className="btn-primary gen-delete-confirm" onClick={confirmDeleteArticle} disabled={deleting}>
-                {deleting ? 'Deleting…' : 'Confirm Delete'}
-              </button>
+              {!deleteTarget.blocked && (
+                <button className="btn-primary gen-delete-confirm" onClick={confirmDeleteArticle} disabled={deleting}>
+                  {deleting ? 'Deleting…' : 'Confirm Delete'}
+                </button>
+              )}
             </div>
           </section>
         </div>

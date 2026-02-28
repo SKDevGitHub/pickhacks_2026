@@ -27,13 +27,13 @@ def clean_tts_text(text: str) -> str:
 
 
 def article_tts_text(article: dict) -> str:
+    """Build TTS text from title + summary only (keeps credit usage low)."""
     title = clean_tts_text(article.get("title", ""))
     summary = clean_tts_text(article.get("summary", ""))
-    content = clean_tts_text(article.get("content", ""))
 
-    combined = f"{title}. {summary}. {content}".strip()
-    if len(combined) > 4500:
-        combined = combined[:4500]
+    combined = f"{title}. {summary}".strip()
+    if len(combined) > 1000:
+        combined = combined[:1000]
     return combined
 
 
