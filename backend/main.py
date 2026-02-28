@@ -4,324 +4,202 @@ Predictive Environmental Externality Engine
 """
 
 import os
-import json
-from typing import Optional
-from pathlib import Path
+import time
+import uuid
+import logging
+from collections import defaultdict, deque
 
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-from auth import verify_token
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
 
-from data.technologies import (
-    CATEGORIES,
-    ENGINE_STATUS,
-    MACRO_SUMMARY,
-    get_all_technologies_flat,
-    get_technology_by_id,
-    REGIONS,
-)
+from routers.system import router as system_router
+from routers.tech import router as tech_router
+from routers.news import router as news_router
+from routers.chat import router as chat_router
 
-load_dotenv()
+logger = logging.getLogger("tech-signals-api")
+if not logger.handlers:
+    logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO").upper())
+
+is_production = os.getenv('APP_ENV', 'development').lower() == 'production'
 
 app = FastAPI(
     title="Tech Signals API",
     description="Predictive Environmental Externality Engine — forecasts the environmental consequences of emerging technology adoption.",
     version="1.0.0",
+    docs_url=None if is_production else "/docs",
+    redoc_url=None if is_production else "/redoc",
+    openapi_url=None if is_production else "/openapi.json",
 )
 
 
-def _city_name_from_filename(path: Path) -> str:
-    stem = path.stem.replace("_timeseries", "").replace("_", " ").strip()
-    parts = [p.capitalize() for p in stem.split() if p]
-    return " ".join(parts)
+def _csv_list(value: str, default: list[str]) -> list[str]:
+    items = [item.strip() for item in str(value or '').split(',') if item.strip()]
+    return items or default
 
 
-def _safe_float(value, default=0.0):
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return float(default)
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('X-Frame-Options', 'DENY')
+        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        response.headers.setdefault('Permissions-Policy', 'geolocation=(), camera=(), microphone=()')
+        response.headers.setdefault('Cross-Origin-Resource-Policy', 'same-site')
+        response.headers.setdefault('Cross-Origin-Opener-Policy', 'same-origin')
+        response.headers.setdefault('Cross-Origin-Embedder-Policy', 'require-corp')
+        response.headers.setdefault('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'")
+
+        if os.getenv('ENFORCE_HTTPS', 'false').lower() == 'true':
+            response.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+
+        return response
 
 
-def _normalize_city_stats(city_name: str, payload: dict) -> dict:
-    power_block = payload.get("power_usage") or payload.get("power") or {}
-    water_block = payload.get("water_usage") or payload.get("water") or {}
-    pollution_block = payload.get("pollution") or payload.get("air_pollution") or {}
+class AbuseProtectionMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+        self.max_body_bytes = int(os.getenv('MAX_REQUEST_BODY_BYTES', '1048576'))
+        self.window_seconds = int(os.getenv('RATE_LIMIT_WINDOW_SECONDS', '60'))
+        self.max_requests = int(os.getenv('RATE_LIMIT_MAX_REQUESTS', '120'))
+        self.strict_window_seconds = int(os.getenv('STRICT_RATE_LIMIT_WINDOW_SECONDS', '60'))
+        self.strict_max_requests = int(os.getenv('STRICT_RATE_LIMIT_MAX_REQUESTS', '20'))
+        self.strict_prefixes = _csv_list(
+            os.getenv('STRICT_RATE_LIMIT_PATH_PREFIXES', ''),
+            ['/api/chat', '/api/articles/generate', '/api/articles/'],
+        )
+        self.trust_proxy_headers = os.getenv('TRUST_PROXY_HEADERS', 'false').lower() == 'true'
+        self._global_hits: defaultdict[str, deque[float]] = defaultdict(deque)
+        self._strict_hits: defaultdict[str, deque[float]] = defaultdict(deque)
 
-    power_value = power_block.get("total_electricity_kwh", power_block.get("power_consumption", 0))
-    water_value = water_block.get("total_water_kgal", water_block.get("water_consumption", 0))
-    pollution_value = pollution_block.get("total_ghg_mt_co2e", pollution_block.get("pm25_concentration", 0))
+    def _client_ip(self, request: Request) -> str:
+        if self.trust_proxy_headers:
+            forwarded = request.headers.get('x-forwarded-for', '').strip()
+            if forwarded:
+                return forwarded.split(',')[0].strip() or 'unknown'
+        client = request.client
+        return client.host if client and client.host else 'unknown'
 
-    power_growth = power_block.get("avg_growth", power_block.get("avg_growth_rate", 0))
-    water_growth = water_block.get("avg_growth", water_block.get("avg_growth_rate", 0))
-    pollution_growth = pollution_block.get("avg_growth", pollution_block.get("avg_growth_rate", 0))
+    @staticmethod
+    def _is_strict_path(path: str, prefixes: list[str]) -> bool:
+        return any(path.startswith(prefix) for prefix in prefixes)
 
-    pollution_unit = "MtCO₂e" if "total_ghg_mt_co2e" in pollution_block else "PM2.5"
+    @staticmethod
+    def _strict_bucket(path: str, prefixes: list[str]) -> str:
+        for prefix in prefixes:
+            if path.startswith(prefix):
+                return prefix
+        return path
 
-    city_id = city_name.lower().replace(".", "").replace(" ", "-")
+    @staticmethod
+    def _prune(queue: deque[float], now: float, window: int) -> None:
+        cutoff = now - float(window)
+        while queue and queue[0] < cutoff:
+            queue.popleft()
 
-    return {
-        "id": city_id,
-        "name": city_name,
-        "source": payload.get("source", "Unknown source"),
-        "intersections": int(payload.get("intersections", 0) or 0),
-        "stats": {
-            "power": {
-                "value": _safe_float(power_value),
-                "unit": "kWh",
-                "avgGrowth": _safe_float(power_growth),
-            },
-            "water": {
-                "value": _safe_float(water_value),
-                "unit": "kgal",
-                "avgGrowth": _safe_float(water_growth),
-            },
-            "pollution": {
-                "value": _safe_float(pollution_value),
-                "unit": pollution_unit,
-                "avgGrowth": _safe_float(pollution_growth),
-            },
-        },
-        "timeSeries": payload.get("time_series", []),
-    }
+    async def dispatch(self, request: Request, call_next):
+        request_id = request.headers.get('x-request-id') or str(uuid.uuid4())
+
+        content_length = request.headers.get('content-length')
+        if content_length and content_length.isdigit() and int(content_length) > self.max_body_bytes:
+            return JSONResponse(
+                status_code=413,
+                content={'detail': 'Request body too large'},
+                headers={'X-Request-ID': request_id},
+            )
+
+        if request.url.path.startswith('/api'):
+            now = time.monotonic()
+            ip = self._client_ip(request)
+
+            global_key = ip
+            global_queue = self._global_hits[global_key]
+            self._prune(global_queue, now, self.window_seconds)
+            if len(global_queue) >= self.max_requests:
+                return JSONResponse(
+                    status_code=429,
+                    content={'detail': 'Rate limit exceeded'},
+                    headers={
+                        'Retry-After': str(self.window_seconds),
+                        'X-Request-ID': request_id,
+                    },
+                )
+            global_queue.append(now)
+
+            if self._is_strict_path(request.url.path, self.strict_prefixes):
+                strict_bucket = self._strict_bucket(request.url.path, self.strict_prefixes)
+                strict_key = f'{ip}:{strict_bucket}'
+                strict_queue = self._strict_hits[strict_key]
+                self._prune(strict_queue, now, self.strict_window_seconds)
+                if len(strict_queue) >= self.strict_max_requests:
+                    return JSONResponse(
+                        status_code=429,
+                        content={'detail': 'Rate limit exceeded for sensitive endpoint'},
+                        headers={
+                            'Retry-After': str(self.strict_window_seconds),
+                            'X-Request-ID': request_id,
+                        },
+                    )
+                strict_queue.append(now)
+
+        response = await call_next(request)
+        response.headers.setdefault('X-Request-ID', request_id)
+        return response
 
 
-def _load_cities() -> list[dict]:
-    root_dir = Path(__file__).resolve().parents[1]
-    cities_dir = root_dir / "data" / "cities"
+allow_origins = _csv_list(
+    os.getenv('CORS_ALLOW_ORIGINS', ''),
+    [
+        'http://localhost:5173',
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+    ],
+)
 
-    if not cities_dir.exists():
-        return []
+allowed_hosts = _csv_list(os.getenv('ALLOWED_HOSTS', ''), ['localhost', '127.0.0.1'])
 
-    cities_by_id = {}
-    for path in sorted(cities_dir.glob("*.json")):
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
+if os.getenv('ENFORCE_HTTPS', 'false').lower() == 'true':
+    app.add_middleware(HTTPSRedirectMiddleware)
 
-        city_name = str(payload.get("city", "")).strip() or _city_name_from_filename(path)
-        normalized = _normalize_city_stats(city_name, payload)
-
-        existing = cities_by_id.get(normalized["id"])
-        if not existing:
-            cities_by_id[normalized["id"]] = normalized
-            continue
-
-        existing_has_series = bool(existing.get("timeSeries"))
-        normalized_has_series = bool(normalized.get("timeSeries"))
-        if normalized_has_series and not existing_has_series:
-            cities_by_id[normalized["id"]] = normalized
-
-    return sorted(cities_by_id.values(), key=lambda city: city["name"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(AbuseProtectionMiddleware)
 
 # CORS — allow the React dev server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=allow_origins,
+    allow_credentials=False,
+    allow_methods=['GET', 'POST', 'PUT', 'OPTIONS'],
+    allow_headers=['Authorization', 'Content-Type'],
 )
 
 
-# ──────────────────────────────────────────────
-#  Public endpoints (no auth required)
-# ──────────────────────────────────────────────
-
-@app.get("/api/health")
-async def health():
-    return {"status": "ok", "service": "tech-signals-api"}
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger.warning('Validation error on %s: %s', request.url.path, exc.errors())
+    return JSONResponse(status_code=422, content={'detail': 'Invalid request payload'})
 
 
-@app.get("/api/engine-status")
-async def engine_status():
-    """Engine Status metrics for the Home dashboard."""
-    return ENGINE_STATUS
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception('Unhandled error on %s', request.url.path)
+    return JSONResponse(status_code=500, content={'detail': 'Internal server error'})
 
-
-@app.get("/api/macro-summary")
-async def macro_summary():
-    """AI-generated macro summary of environmental shifts."""
-    return {"summary": MACRO_SUMMARY}
-
-
-@app.get("/api/categories")
-async def list_categories():
-    """List all technology categories with aggregate metrics."""
-    result = []
-    for cat in CATEGORIES:
-        techs = cat["technologies"]
-        n = len(techs)
-        avg_power = round(sum(t["power"]["forecastIndex"] for t in techs) / n, 1)
-        avg_pollution = round(sum(t["pollution"]["forecastIndex"] for t in techs) / n, 1)
-        avg_water = round(sum(t["water"]["forecastIndex"] for t in techs) / n, 1)
-        result.append({
-            "id": cat["id"],
-            "name": cat["name"],
-            "description": cat["description"],
-            "technologyCount": n,
-            "averages": {
-                "power": avg_power,
-                "pollution": avg_pollution,
-                "water": avg_water,
-            },
-            "technologies": cat["technologies"],
-        })
-    return result
-
-
-@app.get("/api/technologies")
-async def list_technologies(
-    category: Optional[str] = Query(None),
-    power_min: Optional[int] = Query(None, alias="powerMin"),
-    power_max: Optional[int] = Query(None, alias="powerMax"),
-    pollution_min: Optional[int] = Query(None, alias="pollutionMin"),
-    pollution_max: Optional[int] = Query(None, alias="pollutionMax"),
-    water_min: Optional[int] = Query(None, alias="waterMin"),
-    water_max: Optional[int] = Query(None, alias="waterMax"),
-    horizon: Optional[str] = Query(None),
-    search: Optional[str] = Query(None),
-    sort_by: Optional[str] = Query(None, alias="sortBy"),
-):
-    """
-    Filterable, searchable list of all technologies.
-    Supports filters for power, pollution, water ranges, category, and horizon.
-    """
-    techs = get_all_technologies_flat()
-
-    if category:
-        techs = [t for t in techs if t["categoryId"] == category]
-    if horizon:
-        techs = [t for t in techs if t["forecastHorizon"] == horizon]
-    if search:
-        q = search.lower()
-        techs = [t for t in techs if q in t["name"].lower() or q in t["description"].lower()]
-
-    if power_min is not None:
-        techs = [t for t in techs if t["power"]["forecastIndex"] >= power_min]
-    if power_max is not None:
-        techs = [t for t in techs if t["power"]["forecastIndex"] <= power_max]
-    if pollution_min is not None:
-        techs = [t for t in techs if t["pollution"]["forecastIndex"] >= pollution_min]
-    if pollution_max is not None:
-        techs = [t for t in techs if t["pollution"]["forecastIndex"] <= pollution_max]
-    if water_min is not None:
-        techs = [t for t in techs if t["water"]["forecastIndex"] >= water_min]
-    if water_max is not None:
-        techs = [t for t in techs if t["water"]["forecastIndex"] <= water_max]
-
-    if sort_by == "power":
-        techs.sort(key=lambda t: t["power"]["forecastIndex"], reverse=True)
-    elif sort_by == "pollution":
-        techs.sort(key=lambda t: t["pollution"]["forecastIndex"], reverse=True)
-    elif sort_by == "water":
-        techs.sort(key=lambda t: t["water"]["forecastIndex"], reverse=True)
-    elif sort_by == "risk":
-        techs.sort(key=lambda t: t["externalityRisk"], reverse=True)
-    else:
-        techs.sort(key=lambda t: t["externalityRisk"], reverse=True)
-
-    return techs
-
-
-@app.get("/api/technologies/{tech_id}")
-async def get_technology(tech_id: str):
-    """Get detailed technology data including trajectory and drivers."""
-    tech = get_technology_by_id(tech_id)
-    if not tech:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Technology not found")
-    return tech
-
-
-@app.get("/api/alerts")
-async def alerts():
-    """Top technologies ranked by projected environmental strain (12–36m)."""
-    techs = get_all_technologies_flat()
-    techs.sort(key=lambda t: t["externalityRisk"], reverse=True)
-    return techs[:6]
-
-
-@app.get("/api/regions")
-async def list_regions():
-    return REGIONS
-
-
-@app.get("/api/cities")
-async def list_cities():
-    """List pre-loaded city stats for Forecasts city selector."""
-    return _load_cities()
-
-
-@app.get("/api/scenarios/simulate")
-async def simulate_scenario(
-    tech_id: str = Query(..., alias="techId"),
-    region: str = Query("Global"),
-    scale: float = Query(1.0, ge=0.1, le=10.0),
-):
-    """
-    Run a basic scaling simulation.
-    Returns projected Power/Pollution/Water at the given deployment scale.
-    """
-    tech = get_technology_by_id(tech_id)
-    if not tech:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=404, detail="Technology not found")
-
-    trajectory = tech.get("trajectory", {})
-
-    def _scale_series(series, multiplier):
-        return {
-            "historical": series.get("historical", []),
-            "projected": [
-                {
-                    "month": p["month"],
-                    "value": round(p["value"] * multiplier, 1),
-                    "upper": round(p["upper"] * multiplier, 1),
-                    "lower": round(max(0, p["lower"] * multiplier), 1),
-                }
-                for p in series.get("projected", [])
-            ],
-        }
-
-    return {
-        "technology": tech["name"],
-        "region": region,
-        "scale": scale,
-        "power": _scale_series(trajectory.get("power", {}), scale),
-        "pollution": _scale_series(trajectory.get("pollution", {}), scale),
-        "water": _scale_series(trajectory.get("water", {}), scale),
-        "metrics": {
-            "power": {
-                "forecastIndex": min(100, round(tech["power"]["forecastIndex"] * scale)),
-                "mwDemand": tech["power"]["mwDemand"],
-            },
-            "pollution": {
-                "forecastIndex": min(100, round(tech["pollution"]["forecastIndex"] * scale)),
-                "emissionDelta": tech["pollution"]["emissionDelta"],
-            },
-            "water": {
-                "forecastIndex": min(100, round(tech["water"]["forecastIndex"] * scale)),
-                "cubicMetersYear": tech["water"]["cubicMetersYear"],
-            },
-        },
-    }
-
-
-@app.get("/api/me")
-async def get_current_user(token_payload: dict = Depends(verify_token)):
-    """Protected route — returns the authenticated user's token payload."""
-    return {
-        "sub": token_payload.get("sub"),
-        "email": token_payload.get("email"),
-        "permissions": token_payload.get("permissions", []),
-    }
+# Router registration
+app.include_router(system_router)
+app.include_router(tech_router)
+app.include_router(news_router)
+app.include_router(chat_router)
 
 
 if __name__ == "__main__":

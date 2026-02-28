@@ -1,18 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api';
-import PillarPanel from '../components/PillarPanel';
+import { useAuth0 } from '@auth0/auth0-react';
+import { api } from '../../api';
+import PillarPanel from '../../components/PillarPanel';
+import { useRadarFavorites } from '../../hooks/useRadarFavorites';
 
 const HORIZON_OPTIONS = ['', '12m', '24m', '36m'];
 
 export default function Explorer() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth0();
   const [technologies, setTechnologies] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [horizon, setHorizon] = useState('');
   const [sortBy, setSortBy] = useState('risk');
+  const { isFavorite, toggleFavorite } = useRadarFavorites();
 
   useEffect(() => {
     api.categories().then((cats) =>
@@ -28,6 +32,13 @@ export default function Explorer() {
     if (sortBy) params.sortBy = sortBy;
     api.technologies(params).then(setTechnologies).catch(() => {});
   }, [search, category, horizon, sortBy]);
+
+  const openForecastDetail = (techId) => {
+    if (!isAuthenticated) {
+      return;
+    }
+    navigate(`/forecasts/${techId}`);
+  };
 
   return (
     <div className="fade-in">
@@ -85,7 +96,7 @@ export default function Explorer() {
           <div
             key={tech.id}
             className="alert-card"
-            onClick={() => navigate(`/forecasts/${tech.id}`)}
+            onClick={() => openForecastDetail(tech.id)}
           >
             <div className="alert-card-header">
               <div>
@@ -95,6 +106,18 @@ export default function Explorer() {
                 </div>
               </div>
               <div className="tech-card-risk">
+                {isAuthenticated && (
+                  <button
+                    className={isFavorite(tech.id) ? 'btn-auth btn-logout' : 'btn-auth btn-login'}
+                    style={{ height: 24, padding: '0 8px', fontSize: '0.65rem', marginBottom: 6 }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleFavorite(tech.id);
+                    }}
+                  >
+                    {isFavorite(tech.id) ? 'Untrack' : 'Track'}
+                  </button>
+                )}
                 <span
                   className="risk-score"
                   style={{
@@ -129,6 +152,12 @@ export default function Explorer() {
         >
           No technologies match your filters.
         </div>
+      )}
+
+      {!isAuthenticated && technologies.length > 0 && (
+        <p className="microcopy" style={{ marginTop: 'var(--sp-4)', borderTop: 'none', paddingTop: 0 }}>
+          Sign in to open full forecast details and use Radar tracking features.
+        </p>
       )}
 
       <p className="microcopy" style={{ marginTop: 'var(--sp-8)' }}>

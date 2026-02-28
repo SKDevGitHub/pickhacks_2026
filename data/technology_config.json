@@ -1,0 +1,88 @@
+{
+  "defaults": {
+    "unknownSource": "Unknown source",
+    "globalRegion": "Global",
+    "defaultForecastHorizon": "24m",
+    "emptySummary": "No emergent technology data was found in the data folder.",
+    "macroSummaryTemplate": "Technology forecasts are now sourced from data/emergent_tech. Highest current externality pressure appears in: {top_names}."
+  },
+  "thresholds": {
+    "highRiskAlert": 70,
+    "loadConcentration": {
+      "high": 70,
+      "moderate": 40
+    },
+    "toxicityTier": {
+      "tier1": 75,
+      "tier2": 50
+    },
+    "wasteBurden": {
+      "high": 70,
+      "moderate": 40
+    }
+  },
+  "labels": {
+    "mwDemandSuffix": "MW-equivalent",
+    "waterYearSuffix": "M units/yr",
+    "pollutionPrefix": "PM2.5",
+    "loadConcentration": {
+      "high": "High",
+      "moderate": "Moderate",
+      "low": "Low"
+    },
+    "toxicityTier": {
+      "tier1": "Tier 1",
+      "tier2": "Tier 2",
+      "tier3": "Tier 3"
+    },
+    "wasteBurden": {
+      "high": "High",
+      "moderate": "Moderate",
+      "low": "Low"
+    },
+    "driverLabels": {
+      "source": "Source",
+      "powerGrowth": "Power Growth",
+      "waterGrowth": "Water Growth",
+      "pollutionGrowth": "Pollution Growth",
+      "riskScore": "Risk Score"
+    }
+  },
+  "categories": {
+    "rules": [
+      {
+        "matchAny": ["ai"],
+        "matchRegex": ["data[_\\s-]?center"],
+        "id": "ai-infrastructure",
+        "name": "AI Infrastructure",
+        "description": "AI campuses, model-serving data centers, and AI-intensive infrastructure."
+      },
+      {
+        "matchAny": ["autonomous"],
+        "matchRegex": ["autonomous[_\\s-]?vehicles?"],
+        "id": "mobility-systems",
+        "name": "Mobility Systems",
+        "description": "Autonomous mobility systems and supporting operational infrastructure."
+      },
+      {
+        "matchAny": ["semi"],
+        "matchRegex": ["semi[_\\s-]?conductor"],
+        "id": "advanced-manufacturing",
+        "name": "Advanced Manufacturing",
+        "description": "Advanced manufacturing systems with high utility and environmental footprints."
+      },
+      {
+        "matchAny": ["robot"],
+        "matchRegex": ["robot(ics)?"],
+        "id": "robotics-automation",
+        "name": "Robotics & Automation",
+        "description": "Industrial robotics and large-scale automation systems."
+      }
+    ],
+    "fallback": {
+      "id": "emergent-tech",
+      "name": "Emergent Tech",
+      "description": "Emerging technology systems tracked from source datasets."
+    }
+  }
+}

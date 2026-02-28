@@ -24,6 +24,33 @@ security = HTTPBearer(auto_error=False)
 _jwks_cache: Optional[dict] = None
 
 
+def _csv_set(value: str) -> set[str]:
+    return {item.strip().lower() for item in str(value or "").split(",") if item.strip()}
+
+
+def can_manage_articles(token_payload: dict) -> bool:
+    """Determine whether token payload grants access to article generation/editing."""
+    permissions = token_payload.get("permissions") or []
+    if isinstance(permissions, list) and "manage:articles" in permissions:
+        return True
+
+    allowed_emails = _csv_set(os.getenv("GENERATE_ALLOWED_EMAILS", ""))
+    allowed_subs = _csv_set(os.getenv("GENERATE_ALLOWED_SUBS", ""))
+
+    if not allowed_emails and not allowed_subs:
+        return False
+
+    email = str(token_payload.get("email", "")).strip().lower()
+    sub = str(token_payload.get("sub", "")).strip().lower()
+
+    if email and email in allowed_emails:
+        return True
+    if sub and sub in allowed_subs:
+        return True
+
+    return False
+
+
 async def get_jwks() -> dict:
     """Fetch the JWKS (JSON Web Key Set) from Auth0."""
     global _jwks_cache
@@ -82,10 +109,10 @@ async def verify_token(
         )
         return payload
 
-    except JWTError as err:
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Token validation failed: {str(err)}",
+            detail="Token validation failed",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except httpx.HTTPError:
@@ -93,3 +120,30 @@ async def verify_token(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Unable to verify credentials — Auth0 unreachable",
         )
+
+
+def _is_edu_email(email: str) -> bool:
+    """Return True when the email belongs to a .edu domain."""
+    email = str(email or "").strip().lower()
+    return email.endswith(".edu") or ".edu." in email.split("@")[-1]
+
+
+async def require_edu_email(token_payload: dict = Depends(verify_token)) -> dict:
+    """Authorization dependency — requires a verified .edu email address."""
+    email = str(token_payload.get("email", "")).strip().lower()
+    if not _is_edu_email(email):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="A .edu email address is required to access this resource.",
+        )
+    return token_payload
+
+
+async def require_article_admin(token_payload: dict = Depends(verify_token)) -> dict:
+    """Authorization dependency for article generation/editing endpoints."""
+    if not can_manage_articles(token_payload):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not allowed to access article generation features.",
+        )
+    return token_payload

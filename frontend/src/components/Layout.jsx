@@ -1,12 +1,17 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
+import { canAccessGenerate, isEduEmail } from '../authz';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Home' },
+  { to: '/learn', label: 'Learn' },
+  { to: '/explorer', label: 'Explorer' },
+  { to: '/radar', label: 'Radar' },
   { to: '/forecasts', label: 'Forecasts' },
   { to: '/scenarios', label: 'Scenarios' },
-  { to: '/explorer', label: 'Explorer' },
-  { to: '/about', label: 'About' },
+  { to: '/ask', label: 'Ask Gemini' },
+  { to: '/news', label: 'News' },
+  { to: '/generate', label: 'Generate' },
 ];
 
 const MOBILE_ICONS = {
@@ -14,12 +19,26 @@ const MOBILE_ICONS = {
   '/forecasts': '◈',
   '/scenarios': '◇',
   '/explorer': '⊞',
-  '/about': '⊘',
+  '/learn': '◍',
+  '/radar': '◎',
+  '/news': '⊟',
+  '/ask': '✦',
+  '/generate': '⊕',
 };
 
 export default function Layout({ children }) {
   const { isAuthenticated, user, loginWithRedirect, logout } = useAuth0();
   const location = useLocation();
+  const generateAllowed = isAuthenticated && canAccessGenerate(user);
+  const eduOnlyTabs = new Set(['/forecasts', '/scenarios', '/ask']);
+  const authOnlyTabs = new Set(['/radar']);
+  const eduAllowed = isAuthenticated && isEduEmail(user);
+  const visibleNavItems = NAV_ITEMS.filter((item) => {
+    if (eduOnlyTabs.has(item.to) && !eduAllowed) return false;
+    if (authOnlyTabs.has(item.to) && !isAuthenticated) return false;
+    if (item.to === '/generate' && !generateAllowed) return false;
+    return true;
+  });
 
   return (
     <div className="app-shell">
@@ -32,7 +51,7 @@ export default function Layout({ children }) {
           </NavLink>
 
           <div className="nav-links">
-            {NAV_ITEMS.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -92,7 +111,7 @@ export default function Layout({ children }) {
       {/* ── Mobile Navigation ── */}
       <nav className="mobile-nav">
         <div className="mobile-nav-inner">
-          {NAV_ITEMS.map((item) => (
+          {visibleNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

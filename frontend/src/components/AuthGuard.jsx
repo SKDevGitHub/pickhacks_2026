@@ -1,5 +1,5 @@
 import { useAuth0 } from '@auth0/auth0-react';
-import Login from '../pages/Login';
+import NotFound from '../pages/public/NotFound';
 
 export default function AuthGuard({ children }) {
   const { isLoading, isAuthenticated } = useAuth0();
@@ -48,7 +48,7 @@ export default function AuthGuard({ children }) {
   }
 
   if (!isAuthenticated) {
-    return <Login />;
+    return <NotFound />;
   }
 
   return children;

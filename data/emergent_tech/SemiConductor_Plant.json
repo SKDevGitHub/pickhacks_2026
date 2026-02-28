@@ -1,5 +1,10 @@
 {
     "source": "https://www.semiconductors.org/chip-fab-water-energy-usage",
+    "learn": {
+        "description": "Semiconductor plants are advanced fabrication facilities that produce the chips powering modern electronics and AI hardware.",
+        "significance": "Chip supply is now strategic infrastructure for economic resilience, defense capability, and global technology leadership.",
+        "valueAdd": "Local fabrication capacity can strengthen supply-chain security, create advanced manufacturing jobs, and support regional innovation ecosystems."
+    },
     "power": {
         "power_consumption": 1200000000,
         "avg_growth_rate": 4.0

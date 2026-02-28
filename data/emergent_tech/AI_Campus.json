@@ -1,5 +1,10 @@
 {
     "source": "https://www.datacenterknowledge.com/ai-hpc-training-campus-energy-water-impacts",
+    "learn": {
+        "description": "AI campuses are large facilities built for training and serving advanced AI models at scale.",
+        "significance": "They are becoming core infrastructure for national competitiveness, scientific research, and next-generation digital services.",
+        "valueAdd": "AI campuses can accelerate innovation, create high-skilled jobs, and improve public and private sector decision-making through stronger AI capability."
+    },
     "power": {
         "power_consumption": 600000000,
         "avg_growth_rate": 3.5

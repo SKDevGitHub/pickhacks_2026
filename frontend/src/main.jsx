@@ -7,7 +7,6 @@ import './index.css';
 
 const domain = import.meta.env.VITE_AUTH0_DOMAIN;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID;
-const audience = import.meta.env.VITE_AUTH0_AUDIENCE;
 
 function onRedirectCallback(appState) {
   window.history.replaceState({}, document.title, appState?.returnTo ?? '/');
@@ -22,10 +21,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         authorizationParams={{
           redirect_uri: window.location.origin,
           scope: 'openid profile email',
-          ...(audience ? { audience } : {}),
         }}
         onRedirectCallback={onRedirectCallback}
-        cacheLocation="localstorage"
+        cacheLocation="memory"
+        useRefreshTokens={false}
       >
         <App />
       </Auth0Provider>

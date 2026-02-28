@@ -1,5 +1,10 @@
 {
     "source": "https://www.forbes.com/autonomous-vehicle-fleet-infrastructure-scaling",
+    "learn": {
+        "description": "Autonomous vehicles combine AI perception, planning, and control systems to drive with reduced human intervention.",
+        "significance": "They are a major shift in transportation operations with implications for logistics, public safety, and accessibility.",
+        "valueAdd": "Autonomous fleets can improve road safety outcomes, increase mobility access, and enhance freight efficiency across urban and regional networks."
+    },
     "power": {
         "power_consumption": 150000000,
         "avg_growth_rate": 2.5

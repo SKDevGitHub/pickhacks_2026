@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../api';
-import PillarPanel from '../components/PillarPanel';
+import { api } from '../../api';
+import PillarPanel from '../../components/PillarPanel';
+import { useRadarFavorites } from '../../hooks/useRadarFavorites';
 
 export default function Forecasts() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [selectedCityId, setSelectedCityId] = useState('');
+  const { isFavorite, toggleFavorite } = useRadarFavorites();
 
   useEffect(() => {
     api.categories().then(setCategories).catch(() => {});
@@ -100,10 +102,11 @@ export default function Forecasts() {
                 <span className="avg-chip-label">Pollution ({selectedCity.stats.pollution.unit}) · {selectedCity.stats.pollution.avgGrowth.toFixed(1)}%</span>
               </div>
             </div>
-            <p className="microcopy" style={{ marginTop: 0 }}>
-              Source: {selectedCity.source}
-              {selectedCity.intersections > 0 ? ` · Intersections: ${selectedCity.intersections.toLocaleString()}` : ''}
-            </p>
+            {selectedCity.intersections > 0 && (
+              <p className="microcopy" style={{ marginTop: 0 }}>
+                Intersections: {selectedCity.intersections.toLocaleString()}
+              </p>
+            )}
           </>
         )}
       </div>
@@ -156,6 +159,16 @@ export default function Forecasts() {
                   <PillarPanel type="water" data={tech.water} compact />
                 </div>
                 <div className="tech-card-risk">
+                  <button
+                    className={isFavorite(tech.id) ? 'btn-secondary btn-untrack' : 'btn-primary'}
+                    style={{ height: 28, padding: '0 10px', fontSize: '0.7rem', marginBottom: 6 }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleFavorite(tech.id);
+                    }}
+                  >
+                    {isFavorite(tech.id) ? 'Untrack' : 'Track'}
+                  </button>
                   <span
                     className="risk-score"
                     style={{

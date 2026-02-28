@@ -1,5 +1,10 @@
 {
     "source": "IHeartIntersections.com",
+    "learn": {
+        "description": "AI intersections use sensors and adaptive signal control to optimize traffic flow in real time.",
+        "significance": "Urban congestion and safety are rising concerns; intelligent intersections provide a near-term path to smarter mobility networks.",
+        "valueAdd": "Cities can reduce commute time, improve emergency response routing, and lower idling-related emissions through better traffic coordination."
+    },
     "power": {
         "power_consumption": 6.6,
         "avg_growth_rate": 1.0    },
