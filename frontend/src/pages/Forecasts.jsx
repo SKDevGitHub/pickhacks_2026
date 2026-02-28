@@ -6,10 +6,28 @@ import PillarPanel from '../components/PillarPanel';
 export default function Forecasts() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [selectedCityId, setSelectedCityId] = useState('');
 
   useEffect(() => {
     api.categories().then(setCategories).catch(() => {});
+    api
+      .cities()
+      .then((data) => {
+        setCities(data);
+        if (data.length) setSelectedCityId(data[0].id);
+      })
+      .catch(() => {});
   }, []);
+
+  const selectedCity = cities.find((city) => city.id === selectedCityId) || null;
+
+  const formatValue = (value) => {
+    if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+    return value.toFixed(1);
+  };
 
   return (
     <div className="fade-in">
@@ -19,6 +37,75 @@ export default function Forecasts() {
           Core intelligence view — technologies grouped by category with Power,
           Pollution, and Water projections for each.
         </p>
+      </div>
+
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-primary)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 'var(--sp-5)',
+          marginBottom: 'var(--sp-8)',
+          display: 'grid',
+          gap: 'var(--sp-4)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+          <div>
+            <div className="text-overline">City Selector</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+              5 pre-loaded cities with baseline utility and pollution stats.
+            </div>
+          </div>
+          <select
+            value={selectedCityId}
+            onChange={(e) => setSelectedCityId(e.target.value)}
+            style={{
+              minWidth: 220,
+              height: 36,
+              background: 'var(--bg-elevated)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-primary)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '0 var(--sp-3)',
+            }}
+          >
+            {cities.map((city) => (
+              <option key={city.id} value={city.id}>
+                {city.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {selectedCity && (
+          <>
+            <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+              <div className="avg-chip" style={{ minWidth: 160 }}>
+                <span className="avg-chip-value" style={{ color: 'var(--power-color)' }}>
+                  {formatValue(selectedCity.stats.power.value)}
+                </span>
+                <span className="avg-chip-label">Power ({selectedCity.stats.power.unit}) · {selectedCity.stats.power.avgGrowth.toFixed(1)}%</span>
+              </div>
+              <div className="avg-chip" style={{ minWidth: 160 }}>
+                <span className="avg-chip-value" style={{ color: 'var(--water-color)' }}>
+                  {formatValue(selectedCity.stats.water.value)}
+                </span>
+                <span className="avg-chip-label">Water ({selectedCity.stats.water.unit}) · {selectedCity.stats.water.avgGrowth.toFixed(1)}%</span>
+              </div>
+              <div className="avg-chip" style={{ minWidth: 160 }}>
+                <span className="avg-chip-value" style={{ color: 'var(--pollution-color)' }}>
+                  {formatValue(selectedCity.stats.pollution.value)}
+                </span>
+                <span className="avg-chip-label">Pollution ({selectedCity.stats.pollution.unit}) · {selectedCity.stats.pollution.avgGrowth.toFixed(1)}%</span>
+              </div>
+            </div>
+            <p className="microcopy" style={{ marginTop: 0 }}>
+              Source: {selectedCity.source}
+              {selectedCity.intersections > 0 ? ` · Intersections: ${selectedCity.intersections.toLocaleString()}` : ''}
+            </p>
+          </>
+        )}
       </div>
 
       {categories.map((cat) => (

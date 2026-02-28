@@ -4,13 +4,14 @@ Predictive Environmental Externality Engine
 """
 
 import os
+import json
 from typing import Optional
+from pathlib import Path
 
-from fastapi import FastAPI, Depends, Query
+from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from auth import verify_token, optional_verify_token
 from data.technologies import (
     CATEGORIES,
     ENGINE_STATUS,
@@ -18,7 +19,6 @@ from data.technologies import (
     get_all_technologies_flat,
     get_technology_by_id,
     REGIONS,
-    TRAJECTORY_CACHE,
 )
 
 load_dotenv()
@@ -28,6 +28,92 @@ app = FastAPI(
     description="Predictive Environmental Externality Engine — forecasts the environmental consequences of emerging technology adoption.",
     version="1.0.0",
 )
+
+
+def _city_name_from_filename(path: Path) -> str:
+    stem = path.stem.replace("_timeseries", "").replace("_", " ").strip()
+    parts = [p.capitalize() for p in stem.split() if p]
+    return " ".join(parts)
+
+
+def _safe_float(value, default=0.0):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _normalize_city_stats(city_name: str, payload: dict) -> dict:
+    power_block = payload.get("power_usage") or payload.get("power") or {}
+    water_block = payload.get("water_usage") or payload.get("water") or {}
+    pollution_block = payload.get("pollution") or payload.get("air_pollution") or {}
+
+    power_value = power_block.get("total_electricity_kwh", power_block.get("power_consumption", 0))
+    water_value = water_block.get("total_water_kgal", water_block.get("water_consumption", 0))
+    pollution_value = pollution_block.get("total_ghg_mt_co2e", pollution_block.get("pm25_concentration", 0))
+
+    power_growth = power_block.get("avg_growth", power_block.get("avg_growth_rate", 0))
+    water_growth = water_block.get("avg_growth", water_block.get("avg_growth_rate", 0))
+    pollution_growth = pollution_block.get("avg_growth", pollution_block.get("avg_growth_rate", 0))
+
+    pollution_unit = "MtCO₂e" if "total_ghg_mt_co2e" in pollution_block else "PM2.5"
+
+    city_id = city_name.lower().replace(".", "").replace(" ", "-")
+
+    return {
+        "id": city_id,
+        "name": city_name,
+        "source": payload.get("source", "Unknown source"),
+        "intersections": int(payload.get("intersections", 0) or 0),
+        "stats": {
+            "power": {
+                "value": _safe_float(power_value),
+                "unit": "kWh",
+                "avgGrowth": _safe_float(power_growth),
+            },
+            "water": {
+                "value": _safe_float(water_value),
+                "unit": "kgal",
+                "avgGrowth": _safe_float(water_growth),
+            },
+            "pollution": {
+                "value": _safe_float(pollution_value),
+                "unit": pollution_unit,
+                "avgGrowth": _safe_float(pollution_growth),
+            },
+        },
+        "timeSeries": payload.get("time_series", []),
+    }
+
+
+def _load_cities() -> list[dict]:
+    root_dir = Path(__file__).resolve().parents[1]
+    cities_dir = root_dir / "data" / "cities"
+
+    if not cities_dir.exists():
+        return []
+
+    cities_by_id = {}
+    for path in sorted(cities_dir.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+
+        city_name = str(payload.get("city", "")).strip() or _city_name_from_filename(path)
+        normalized = _normalize_city_stats(city_name, payload)
+
+        existing = cities_by_id.get(normalized["id"])
+        if not existing:
+            cities_by_id[normalized["id"]] = normalized
+            continue
+
+        existing_has_series = bool(existing.get("timeSeries"))
+        normalized_has_series = bool(normalized.get("timeSeries"))
+        if normalized_has_series and not existing_has_series:
+            cities_by_id[normalized["id"]] = normalized
+
+    return sorted(cities_by_id.values(), key=lambda city: city["name"])
 
 # CORS — allow the React dev server
 app.add_middleware(
@@ -166,6 +252,12 @@ async def list_regions():
     return REGIONS
 
 
+@app.get("/api/cities")
+async def list_cities():
+    """List pre-loaded city stats for Forecasts city selector."""
+    return _load_cities()
+
+
 @app.get("/api/scenarios/simulate")
 async def simulate_scenario(
     tech_id: str = Query(..., alias="techId"),
@@ -218,20 +310,6 @@ async def simulate_scenario(
                 "cubicMetersYear": tech["water"]["cubicMetersYear"],
             },
         },
-    }
-
-
-# ──────────────────────────────────────────────
-#  Protected endpoint example
-# ──────────────────────────────────────────────
-
-@app.get("/api/me")
-async def get_current_user(token_payload: dict = Depends(verify_token)):
-    """Protected route — returns the authenticated user's token payload."""
-    return {
-        "sub": token_payload.get("sub"),
-        "email": token_payload.get("email"),
-        "permissions": token_payload.get("permissions", []),
     }
 
 

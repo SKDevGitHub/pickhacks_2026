@@ -1,0 +1,47 @@
+{
+  "source": "NYC Local Law 84 - Building Energy & Water Disclosure",
+  "city": "New York",
+  "intersections": 12500,
+  "power_usage": {
+    "total_electricity_kwh": 98810606488.1,
+    "avg_growth": 2.5
+  },
+  "water_usage": {
+    "total_water_kgal": 343274346.8,
+    "avg_growth": 2.7
+  },
+  "pollution": {
+    "total_ghg_mt_co2e": 86209590.45,
+    "avg_growth": 2.8
+  },
+  "time_series": [
+    { "year": 2023, "power_kwh": 82, "water_kgal": 0.85, "co2_kg": 32, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2024, "power_kwh": 105, "water_kgal": 1.1, "co2_kg": 41, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2025, "power_kwh": 168, "water_kgal": 2.1, "co2_kg": 68, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2026, "power_kwh": 240, "water_kgal": 3.25, "co2_kg": 95, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2027, "power_kwh": 385, "water_kgal": 5.8, "co2_kg": 142, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2028, "power_kwh": 510, "water_kgal": 8.1, "co2_kg": 195, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2029, "power_kwh": 680, "water_kgal": 11.2, "co2_kg": 260, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2030, "power_kwh": 945, "water_kgal": 15.6, "co2_kg": 350, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+    { "year": 2031, "power_kwh": 1180, "water_kgal": 19.8, "co2_kg": 420, "data_type": "forecast", "scenario": "baseline", "confidence": 0.92 },
+    { "year": 2032, "power_kwh": 1430, "water_kgal": 24.1, "co2_kg": 490, "data_type": "forecast", "scenario": "baseline", "confidence": 0.908 },
+    { "year": 2033, "power_kwh": 1710, "water_kgal": 28.8, "co2_kg": 558, "data_type": "forecast", "scenario": "baseline", "confidence": 0.896 },
+    { "year": 2034, "power_kwh": 2020, "water_kgal": 34.0, "co2_kg": 622, "data_type": "forecast", "scenario": "baseline", "confidence": 0.884 },
+    { "year": 2035, "power_kwh": 2380, "water_kgal": 39.6, "co2_kg": 680, "data_type": "forecast", "scenario": "baseline", "confidence": 0.872 },
+    { "year": 2036, "power_kwh": 2780, "water_kgal": 45.5, "co2_kg": 728, "data_type": "forecast", "scenario": "baseline", "confidence": 0.86 },
+    { "year": 2037, "power_kwh": 3210, "water_kgal": 51.5, "co2_kg": 765, "data_type": "forecast", "scenario": "baseline", "confidence": 0.848 },
+    { "year": 2038, "power_kwh": 3670, "water_kgal": 57.4, "co2_kg": 788, "data_type": "forecast", "scenario": "baseline", "confidence": 0.836 },
+    { "year": 2039, "power_kwh": 4150, "water_kgal": 63.0, "co2_kg": 802, "data_type": "forecast", "scenario": "baseline", "confidence": 0.824 },
+    { "year": 2040, "power_kwh": 4640, "water_kgal": 68.2, "co2_kg": 808, "data_type": "forecast", "scenario": "baseline", "confidence": 0.812 },
+    { "year": 2041, "power_kwh": 5130, "water_kgal": 73.0, "co2_kg": 806, "data_type": "forecast", "scenario": "baseline", "confidence": 0.8 },
+    { "year": 2042, "power_kwh": 5620, "water_kgal": 77.2, "co2_kg": 796, "data_type": "forecast", "scenario": "baseline", "confidence": 0.788 },
+    { "year": 2043, "power_kwh": 6100, "water_kgal": 80.8, "co2_kg": 780, "data_type": "forecast", "scenario": "baseline", "confidence": 0.776 },
+    { "year": 2044, "power_kwh": 6560, "water_kgal": 83.8, "co2_kg": 758, "data_type": "forecast", "scenario": "baseline", "confidence": 0.764 },
+    { "year": 2045, "power_kwh": 6990, "water_kgal": 86.1, "co2_kg": 732, "data_type": "forecast", "scenario": "baseline", "confidence": 0.752 },
+    { "year": 2046, "power_kwh": 7380, "water_kgal": 87.8, "co2_kg": 702, "data_type": "forecast", "scenario": "baseline", "confidence": 0.74 },
+    { "year": 2047, "power_kwh": 7730, "water_kgal": 88.9, "co2_kg": 669, "data_type": "forecast", "scenario": "baseline", "confidence": 0.728 },
+    { "year": 2048, "power_kwh": 8030, "water_kgal": 89.4, "co2_kg": 634, "data_type": "forecast", "scenario": "baseline", "confidence": 0.716 },
+    { "year": 2049, "power_kwh": 8290, "water_kgal": 89.4, "co2_kg": 597, "data_type": "forecast", "scenario": "baseline", "confidence": 0.704 },
+    { "year": 2050, "power_kwh": 8500, "water_kgal": 89.0, "co2_kg": 560, "data_type": "forecast", "scenario": "baseline", "confidence": 0.692 }
+  ]
+}
