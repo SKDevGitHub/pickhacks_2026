@@ -1,0 +1,16 @@
+{
+    "source": "Chicago, Illinois, United States",
+    
+    "power": {
+        "power_consumption": 32000000000,
+        "avg_growth_rate": 1.9
+    },
+    "water": {
+        "water_consumption": 64000000000,
+        "avg_growth_rate": 1.2
+    },
+    "air_pollution": {
+        "pm25_concentration": 10.0,
+        "avg_growth_rate": -0.2
+    }    
+}

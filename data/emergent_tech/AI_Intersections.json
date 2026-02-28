@@ -1,0 +1,14 @@
+{
+    "source": "IHeartIntersections.com",
+    "power": {
+        "power_consumption": 30492,
+        "avg_growth_rate": 1.0    },
+    "water": {
+        "water_consumption": 13860000,
+        "avg_growth_rate": 2.0
+    },
+    "air_pollution": {
+        "pm25_concentration": 0,
+        "avg_growth_rate": 0.0
+    }
+}
