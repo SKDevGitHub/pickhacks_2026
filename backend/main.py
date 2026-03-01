@@ -165,7 +165,7 @@ allow_origins = _csv_list(
     ],
 )
 
-allowed_hosts = _csv_list(os.getenv('ALLOWED_HOSTS', ''), ['localhost', '127.0.0.1'])
+allowed_hosts = _csv_list(os.getenv('ALLOWED_HOSTS', ''), ['localhost', '127.0.0.1', 'chartr.duckdns.org', 'www.chartr.duckdns.org'])
 
 if os.getenv('ENFORCE_HTTPS', 'false').lower() == 'true':
     app.add_middleware(HTTPSRedirectMiddleware)
