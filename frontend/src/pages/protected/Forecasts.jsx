@@ -2,14 +2,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import PillarPanel from '../../components/charts/PillarPanel';
-import { useRadarFavorites } from '../../hooks/useRadarFavorites';
 
 export default function Forecasts() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [selectedCityId, setSelectedCityId] = useState('');
-  const { isFavorite, toggleFavorite } = useRadarFavorites();
+  const [scale, setScale] = useState(1);
 
   useEffect(() => {
     api
@@ -21,11 +20,11 @@ export default function Forecasts() {
       .catch(() => {});
   }, []);
 
-  // Re-fetch categories whenever the selected city changes
+  // Re-fetch categories whenever the selected city or scale changes
   useEffect(() => {
     if (!selectedCityId) return;
-    api.categories(selectedCityId).then(setCategories).catch(() => {});
-  }, [selectedCityId]);
+    api.categories(selectedCityId, scale).then(setCategories).catch(() => {});
+  }, [selectedCityId, scale]);
 
   const selectedCity = cities.find((city) => city.id === selectedCityId) || null;
 
@@ -83,6 +82,30 @@ export default function Forecasts() {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* ── Deployment Scale Slider ── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+          <div>
+            <div className="text-overline">Deployment Scale</div>
+            <div style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+              Adjust how many units of each technology are deployed.
+            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+            <input
+              type="range"
+              min="0.1"
+              max="10"
+              step="0.1"
+              value={scale}
+              onChange={(e) => setScale(parseFloat(e.target.value))}
+              style={{ width: 180, accentColor: 'var(--power-color)' }}
+            />
+            <span style={{ minWidth: 42, fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)', fontSize: '0.85rem' }}>
+              {scale.toFixed(1)}×
+            </span>
+          </div>
         </div>
 
         {selectedCity && (
@@ -152,28 +175,29 @@ export default function Forecasts() {
               <div
                 key={tech.id}
                 className="tech-card"
-                onClick={() => navigate(`/forecasts/${tech.id}?city=${encodeURIComponent(selectedCityId)}`)}
+                onClick={() => navigate(`/forecasts/${tech.id}?city=${encodeURIComponent(selectedCityId)}${scale !== 1 ? `&scale=${scale}` : ''}`)}
               >
                 <div className="tech-card-info">
                   <div className="tech-card-name">{tech.name}</div>
                   <div className="tech-card-desc">{tech.description}</div>
                 </div>
+                {tech.scaling && (
+                  <div style={{ display: 'flex', gap: 'var(--sp-4)', padding: '0 var(--sp-4)', flexWrap: 'wrap', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                    <span style={{ color: 'var(--text-tertiary)' }}>
+                      {tech.scaling.method === 'intersections'
+                        ? `Scales by intersections`
+                        : `${tech.scaling.unitsPerMillionPop} units / 1M pop`}
+                    </span>
+                    <span style={{ color: 'var(--text-tertiary)' }}>·</span>
+                    <span>{tech.cost.units.toLocaleString(undefined, { maximumFractionDigits: 0 })} units deployed</span>
+                    <span style={{ color: 'var(--text-tertiary)' }}>·</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>${tech.cost.total >= 1000 ? `${(tech.cost.total / 1000).toFixed(1)}B` : `${formatValue(tech.cost.total)}M`}</span>
+                  </div>
+                )}
                 <div className="tech-card-pillars">
                   <PillarPanel type="power" data={tech.power} compact />
                   <PillarPanel type="pollution" data={tech.pollution} compact />
                   <PillarPanel type="water" data={tech.water} compact />
-                </div>
-                <div className="tech-card-actions">
-                  <button
-                    className={isFavorite(tech.id) ? 'btn-secondary btn-untrack' : 'btn-primary'}
-                    style={{ height: 28, padding: '0 10px', fontSize: '0.7rem', marginBottom: 6 }}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggleFavorite(tech.id);
-                    }}
-                  >
-                    {isFavorite(tech.id) ? 'Untrack' : 'Track'}
-                  </button>
                 </div>
               </div>
             ))}

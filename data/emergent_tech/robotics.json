@@ -5,9 +5,9 @@
         "significance": "Automation demand is increasing across manufacturing and logistics as labor constraints and throughput requirements grow.",
         "valueAdd": "Robotics can improve productivity, worker safety, and manufacturing consistency while enabling higher-quality output."
     },
-    "power_usage": 60,
-    "water_usage": 0.3,
-    "co2_emissions": 25,
-    "annual_growth_pct": 6.0,
-    "cost of implementation": 5.00
+    "power_usage": 50000,
+    "water_usage": 2.0,
+    "co2_emissions": 20000,
+    "units_per_million_pop": 100,
+    "cost of implementation": 0.075
 }

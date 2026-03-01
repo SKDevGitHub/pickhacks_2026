@@ -5,9 +5,9 @@
         "significance": "Chip supply is now strategic infrastructure for economic resilience, defense capability, and global technology leadership.",
         "valueAdd": "Local fabrication capacity can strengthen supply-chain security, create advanced manufacturing jobs, and support regional innovation ecosystems."
     },
-    "power_usage": 350,
-    "water_usage": 10.0,
-    "co2_emissions": 140,
-    "annual_growth_pct": 2.0,
-    "cost of implementation": 20.00
+    "power_usage": 900000000,
+    "water_usage": 4000000,
+    "co2_emissions": 400000000,
+    "units_per_million_pop": 0.5,
+    "cost of implementation": 15000
 }

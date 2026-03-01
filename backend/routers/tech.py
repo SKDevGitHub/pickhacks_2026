@@ -16,9 +16,9 @@ router = APIRouter(prefix="/api", tags=["tech"])
 
 
 @router.get("/categories")
-async def list_categories(city: Optional[str] = Query(None)):
+async def list_categories(city: Optional[str] = Query(None), scale: float = Query(1.0, ge=0.1, le=10.0)):
     """List all technology categories with aggregate metrics, optionally scoped to a city."""
-    cats = get_categories(city) if city else CATEGORIES
+    cats = get_categories(city, scale) if city else CATEGORIES
     result = []
     for cat in cats:
         techs = cat["technologies"]
@@ -47,6 +47,7 @@ async def list_categories(city: Optional[str] = Query(None)):
 async def list_technologies(
     category: Optional[str] = Query(None),
     city: Optional[str] = Query(None),
+    scale: float = Query(1.0, ge=0.1, le=10.0),
     power_min: Optional[int] = Query(None, alias="powerMin"),
     power_max: Optional[int] = Query(None, alias="powerMax"),
     pollution_min: Optional[int] = Query(None, alias="pollutionMin"),
@@ -60,7 +61,7 @@ async def list_technologies(
     Filterable, searchable list of all technologies.
     Supports filters for power, pollution, water ranges, category, and city.
     """
-    techs = get_all_technologies_flat(city)
+    techs = get_all_technologies_flat(city, scale)
 
     if category:
         techs = [t for t in techs if t["categoryId"] == category]
@@ -94,18 +95,18 @@ async def list_technologies(
 
 
 @router.get("/technologies/{tech_id}")
-async def get_technology(tech_id: str, city: Optional[str] = Query(None)):
+async def get_technology(tech_id: str, city: Optional[str] = Query(None), scale: float = Query(1.0, ge=0.1, le=10.0)):
     """Get detailed technology data including trajectory and drivers."""
-    tech = get_technology_by_id(tech_id, city)
+    tech = get_technology_by_id(tech_id, city, scale)
     if not tech:
         raise HTTPException(status_code=404, detail="Technology not found")
     return tech
 
 
 @router.get("/alerts")
-async def alerts(city: Optional[str] = Query(None)):
+async def alerts(city: Optional[str] = Query(None), scale: float = Query(1.0, ge=0.1, le=10.0)):
     """Top technologies ranked by projected environmental strain."""
-    techs = get_all_technologies_flat(city)
+    techs = get_all_technologies_flat(city, scale)
     techs.sort(key=lambda t: t["power"]["forecastIndex"], reverse=True)
     return techs[:6]
 
@@ -132,42 +133,30 @@ async def simulate_scenario(
     Run a basic scaling simulation.
     Returns projected Power/Pollution/Water at the given deployment scale.
     """
-    tech = get_technology_by_id(tech_id)
+    tech = get_technology_by_id(tech_id, None, scale)
     if not tech:
         raise HTTPException(status_code=404, detail="Technology not found")
 
     trajectory = tech.get("trajectory", {})
 
-    def _scale_series(series, multiplier):
-        return {
-            "historical": series.get("historical", []),
-            "projected": [
-                {
-                    "month": p["month"],
-                    "value": round(p["value"] * multiplier, 1),
-                }
-                for p in series.get("projected", [])
-            ],
-        }
-
     return {
         "technology": tech["name"],
         "region": region,
         "scale": scale,
-        "power": _scale_series(trajectory.get("power", {}), scale),
-        "pollution": _scale_series(trajectory.get("pollution", {}), scale),
-        "water": _scale_series(trajectory.get("water", {}), scale),
+        "power": trajectory.get("power", {}),
+        "pollution": trajectory.get("pollution", {}),
+        "water": trajectory.get("water", {}),
         "metrics": {
             "power": {
-                "forecastIndex": round(tech["power"]["forecastIndex"] * scale, 1),
+                "forecastIndex": round(tech["power"]["forecastIndex"], 1),
                 "unit": tech["power"]["unit"],
             },
             "pollution": {
-                "forecastIndex": round(tech["pollution"]["forecastIndex"] * scale, 1),
+                "forecastIndex": round(tech["pollution"]["forecastIndex"], 1),
                 "unit": tech["pollution"]["unit"],
             },
             "water": {
-                "forecastIndex": round(tech["water"]["forecastIndex"] * scale, 1),
+                "forecastIndex": round(tech["water"]["forecastIndex"], 1),
                 "unit": tech["water"]["unit"],
             },
         },

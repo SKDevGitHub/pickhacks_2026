@@ -140,11 +140,18 @@ def _category_for_stem(stem: str) -> tuple[str, str, str]:
 
 # ── City timeseries loader ───────────────────────────────────────────────
 
-def _load_city_timeseries() -> dict[str, list[dict]]:
-    """Load all *_timeseries.json city files. Returns {city_id: [{year, power_kwh, water_kgal, co2_kg}, ...]}."""
+def _load_city_timeseries() -> tuple[dict[str, list[dict]], dict[str, dict]]:
+    """Load all *_timeseries.json city files.
+
+    Returns:
+        (city_timeseries, city_metadata)
+        city_timeseries: {city_id: [{year, power_kwh, water_kgal, co2_kg}, ...]}
+        city_metadata:   {city_id: {population: int, intersections: int}}
+    """
     cities: dict[str, list[dict]] = {}
+    meta: dict[str, dict] = {}
     if not CITIES_DIR.exists():
-        return cities
+        return cities, meta
 
     for path in sorted(CITIES_DIR.glob("*_timeseries.json")):
         try:
@@ -173,8 +180,12 @@ def _load_city_timeseries() -> dict[str, list[dict]]:
         stem = path.stem.replace("_timeseries", "")
         city_id = re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-")
         cities[city_id] = rows
+        meta[city_id] = {
+            "population": int(payload.get("population", 0)),
+            "intersections": int(payload.get("intersections", 0)),
+        }
 
-    return cities
+    return cities, meta
 
 
 def _average_timeseries(all_city_ts: dict[str, list[dict]]) -> list[dict]:
@@ -231,47 +242,60 @@ def _load_tech_metadata() -> list[dict]:
             "water_usage": _safe_float(payload.get("water_usage"), 1.0),
             "co2_emissions": _safe_float(payload.get("co2_emissions"), 1.0),
             "cost_of_implementation": _safe_float(payload.get("cost of implementation", payload.get("cost_of_implementation")), 0.0),
-            "annual_growth_pct": _safe_float(payload.get("annual_growth_pct"), 0.0),
+            "units_per_million_pop": _safe_float(payload.get("units_per_million_pop"), 0.0),
+            "scale_by": str(payload.get("scale_by", "population")),
         })
     return techs
 
 
 # ── Timeseries → tech allocation helpers ──────────────────────────────────
 
-def _allocate_timeseries(city_ts: list[dict], tech_meta: dict, all_tech_meta: list[dict]) -> list[dict]:
+def _compute_units(tech_meta: dict, city_meta: dict, scale: float = 1.0) -> float:
+    """Compute the number of deployed units for a technology in a city.
+
+    - AI Intersections (scale_by="intersections"): uses the city's intersection count.
+    - All others: uses (population / 1_000_000) * units_per_million_pop.
+    The result is multiplied by the user-provided *scale* factor.
     """
-    Produce a per-technology timeseries by scaling the city's aggregate
-    values by the tech's share of total resource weights.
+    if tech_meta.get("scale_by") == "intersections":
+        units = float(city_meta.get("intersections", 0))
+    else:
+        pop = float(city_meta.get("population", 0))
+        units = (pop / 1_000_000.0) * tech_meta.get("units_per_million_pop", 0.0)
+    return units * scale
 
-    For forecast years the tech's own annual_growth_pct is compounded on
-    top of the baseline city trend so each technology diverges over time.
+
+def _allocate_timeseries(
+    city_ts: list[dict],
+    tech_meta: dict,
+    city_meta: dict,
+    scale: float = 1.0,
+) -> list[dict]:
     """
-    total_power = sum(t["power_usage"] for t in all_tech_meta) or 1.0
-    total_water = sum(t["water_usage"] for t in all_tech_meta) or 1.0
-    total_co2 = sum(t["co2_emissions"] for t in all_tech_meta) or 1.0
+    Produce a per-technology timeseries by adding the technology's resource
+    impact on top of the city's baseline values for each year.
 
-    power_fraction = tech_meta["power_usage"] / total_power
-    water_fraction = tech_meta["water_usage"] / total_water
-    co2_fraction = tech_meta["co2_emissions"] / total_co2
+    displayed_value = city_baseline[year] + (per_unit_cost × num_units)
 
-    growth_rate = tech_meta.get("annual_growth_pct", 0.0) / 100.0  # e.g. 5.0 → 0.05
+    This way the graphs reflect the city's natural growth trend plus
+    the constant overhead introduced by the technology deployment.
+    """
+    num_units = _compute_units(tech_meta, city_meta, scale)
+
+    tech_power = tech_meta["power_usage"] * num_units
+    tech_water = tech_meta["water_usage"] * num_units
+    tech_co2 = tech_meta["co2_emissions"] * num_units
 
     allocated: list[dict] = []
     for row in city_ts:
         year = row["year"]
         is_forecast = year > HISTORICAL_CUTOFF
-        # For forecast years, compound the tech-specific growth
-        if is_forecast:
-            years_ahead = year - HISTORICAL_CUTOFF
-            multiplier = (1.0 + growth_rate) ** years_ahead
-        else:
-            multiplier = 1.0
 
         allocated.append({
             "year": year,
-            "power_kwh": round(row["power_kwh"] * power_fraction * multiplier, 2),
-            "water_kgal": round(row["water_kgal"] * water_fraction * multiplier, 2),
-            "co2_kg": round(row["co2_kg"] * co2_fraction * multiplier, 2),
+            "power_kwh": round(row["power_kwh"] + tech_power, 2),
+            "water_kgal": round(row["water_kgal"] + tech_water, 2),
+            "co2_kg": round(row["co2_kg"] + tech_co2, 2),
             "data_type": "historical" if not is_forecast else "forecast",
         })
     return allocated
@@ -341,7 +365,7 @@ def _load_regions() -> list[str]:
 
 # ── Build catalog ────────────────────────────────────────────────────────
 
-def _build_catalog(timeseries: list[dict], tech_metadata: list[dict]):
+def _build_catalog(timeseries: list[dict], tech_metadata: list[dict], city_meta: dict | None = None, scale: float = 1.0):
     """
     Build the full catalog of categories & technologies from a given
     timeseries (either a specific city's or the cross-city average).
@@ -351,6 +375,9 @@ def _build_catalog(timeseries: list[dict], tech_metadata: list[dict]):
     defaults = TECH_CONFIG.get("defaults", {})
     labels = TECH_CONFIG.get("labels", {})
     thresholds = TECH_CONFIG.get("thresholds", {})
+
+    if city_meta is None:
+        city_meta = {"population": 0, "intersections": 0}
 
     if not tech_metadata or not timeseries:
         return [], {}, {}, {
@@ -362,12 +389,16 @@ def _build_catalog(timeseries: list[dict], tech_metadata: list[dict]):
     # Allocate city timeseries to each tech
     tech_rows: list[dict] = []
     for meta in tech_metadata:
-        ts = _allocate_timeseries(timeseries, meta, tech_metadata)
+        ts = _allocate_timeseries(timeseries, meta, city_meta, scale)
         if not ts:
             continue
+        num_units = _compute_units(meta, city_meta, scale)
+        total_cost = meta["cost_of_implementation"] * num_units  # M$ total
         tech_rows.append({
             **meta,
             "timeseries": ts,
+            "num_units": num_units,
+            "total_cost": total_cost,
             "latest_power": _latest_historical_value(ts, "power_kwh"),
             "latest_water": _latest_historical_value(ts, "water_kgal"),
             "latest_co2": _latest_historical_value(ts, "co2_kg"),
@@ -418,6 +449,16 @@ def _build_catalog(timeseries: list[dict], tech_metadata: list[dict]):
             "region": defaults.get("globalRegion", "Global"),
             "category": category_name,
             "categoryId": category_id,
+            "cost": {
+                "perUnit": round(row["cost_of_implementation"], 4),
+                "total": round(row["total_cost"], 2),
+                "unit": "M$",
+                "units": round(row["num_units"], 1),
+            },
+            "scaling": {
+                "method": row.get("scale_by", "population"),
+                "unitsPerMillionPop": row.get("units_per_million_pop", 0),
+            },
             "learn": {
                 "description": str(row.get("learn", {}).get("description", "")).strip(),
                 "significance": str(row.get("learn", {}).get("significance", "")).strip(),
@@ -466,18 +507,30 @@ def _build_catalog(timeseries: list[dict], tech_metadata: list[dict]):
 
 # ── Module-level data ─────────────────────────────────────────────────────
 
-_ALL_CITY_TIMESERIES = _load_city_timeseries()
+_ALL_CITY_TIMESERIES, _ALL_CITY_META = _load_city_timeseries()
 _AVG_TIMESERIES = _average_timeseries(_ALL_CITY_TIMESERIES)
 _TECH_METADATA = _load_tech_metadata()
+
+# Average city metadata (for Explorer cross-city view)
+def _average_city_meta(all_meta: dict[str, dict]) -> dict:
+    if not all_meta:
+        return {"population": 0, "intersections": 0}
+    n = len(all_meta)
+    return {
+        "population": int(sum(m["population"] for m in all_meta.values()) / n),
+        "intersections": int(sum(m["intersections"] for m in all_meta.values()) / n),
+    }
+
+_AVG_CITY_META = _average_city_meta(_ALL_CITY_META)
 
 # Pre-build catalogs: "average" for Explorer + one per city for Forecasts
 _CATALOGS: dict[str, tuple] = {}
 
-_avg_result = _build_catalog(_AVG_TIMESERIES, _TECH_METADATA)
+_avg_result = _build_catalog(_AVG_TIMESERIES, _TECH_METADATA, _AVG_CITY_META)
 _CATALOGS["__average__"] = _avg_result
 
 for _cid, _cts in _ALL_CITY_TIMESERIES.items():
-    _CATALOGS[_cid] = _build_catalog(_cts, _TECH_METADATA)
+    _CATALOGS[_cid] = _build_catalog(_cts, _TECH_METADATA, _ALL_CITY_META.get(_cid))
 
 # Default (average) exports for backward compatibility
 CATEGORIES = _avg_result[0]
@@ -488,25 +541,43 @@ REGIONS = _load_regions()
 
 # ── Public API ────────────────────────────────────────────────────────────
 
-def _get_catalog(city: str | None = None) -> tuple:
-    """Return the catalog tuple for a city, or the cross-city average."""
+def _get_catalog(city: str | None = None, scale: float = 1.0) -> tuple:
+    """Return the catalog tuple for a city, or the cross-city average.
+
+    If *scale* != 1.0 the catalog is rebuilt on-the-fly with the
+    user-provided unit multiplier.
+    """
+    # Resolve city id
     if not city:
-        return _CATALOGS["__average__"]
-    if city in _CATALOGS:
-        return _CATALOGS[city]
-    normalised = re.sub(r"[^a-z0-9]+", "-", city.lower()).strip("-")
-    return _CATALOGS.get(normalised, _CATALOGS["__average__"])
+        cid = "__average__"
+    elif city in _CATALOGS:
+        cid = city
+    else:
+        cid = re.sub(r"[^a-z0-9]+", "-", city.lower()).strip("-")
+        if cid not in _CATALOGS:
+            cid = "__average__"
+
+    # Default scale → use pre-built
+    if scale == 1.0:
+        return _CATALOGS.get(cid, _CATALOGS["__average__"])
+
+    # Rebuild with custom scale
+    if cid == "__average__":
+        return _build_catalog(_AVG_TIMESERIES, _TECH_METADATA, _AVG_CITY_META, scale)
+    ts = _ALL_CITY_TIMESERIES.get(cid, _AVG_TIMESERIES)
+    cm = _ALL_CITY_META.get(cid, _AVG_CITY_META)
+    return _build_catalog(ts, _TECH_METADATA, cm, scale)
 
 
-def get_categories(city: str | None = None) -> list[dict]:
+def get_categories(city: str | None = None, scale: float = 1.0) -> list[dict]:
     """Return category list, optionally scoped to a city."""
-    catalog = _get_catalog(city)
+    catalog = _get_catalog(city, scale)
     return catalog[0]
 
 
-def get_all_technologies_flat(city: str | None = None) -> list[dict]:
+def get_all_technologies_flat(city: str | None = None, scale: float = 1.0) -> list[dict]:
     """Return a flat list of all technologies, optionally scoped to a city."""
-    catalog = _get_catalog(city)
+    catalog = _get_catalog(city, scale)
     tech_index = catalog[1]
     return [
         {**tech, "category": tech["category"], "categoryId": tech["categoryId"]}
@@ -514,9 +585,9 @@ def get_all_technologies_flat(city: str | None = None) -> list[dict]:
     ]
 
 
-def get_technology_by_id(tech_id: str, city: str | None = None):
+def get_technology_by_id(tech_id: str, city: str | None = None, scale: float = 1.0):
     """Find a technology by ID and attach trajectory + metadata details."""
-    catalog = _get_catalog(city)
+    catalog = _get_catalog(city, scale)
     tech_index = catalog[1]
     trajectory_cache = catalog[2]
 

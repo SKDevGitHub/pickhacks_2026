@@ -33,9 +33,12 @@ export const api = {
   health: () => fetchJSON('/health'),
   engineStatus: () => fetchJSON('/engine-status'),
   macroSummary: () => fetchJSON('/macro-summary'),
-  categories: (city) => {
-    const q = city ? `?city=${encodeURIComponent(city)}` : '';
-    return fetchJSON(`/categories${q}`);
+  categories: (city, scale) => {
+    const qs = new URLSearchParams();
+    if (city) qs.set('city', city);
+    if (scale != null && scale !== 1) qs.set('scale', scale);
+    const q = qs.toString();
+    return fetchJSON(`/categories${q ? '?' + q : ''}`);
   },
   technologies: (params = {}) => {
     const qs = new URLSearchParams();
@@ -45,9 +48,12 @@ export const api = {
     const q = qs.toString();
     return fetchJSON(`/technologies${q ? '?' + q : ''}`);
   },
-  technology: (id, city) => {
-    const q = city ? `?city=${encodeURIComponent(city)}` : '';
-    return fetchJSON(`/technologies/${id}${q}`);
+  technology: (id, city, scale) => {
+    const qs = new URLSearchParams();
+    if (city) qs.set('city', city);
+    if (scale != null && scale !== 1) qs.set('scale', scale);
+    const q = qs.toString();
+    return fetchJSON(`/technologies/${id}${q ? '?' + q : ''}`);
   },
   alerts: () => fetchJSON('/alerts'),
   regions: () => fetchJSON('/regions'),

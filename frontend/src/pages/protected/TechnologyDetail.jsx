@@ -3,17 +3,20 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import TrajectoryChart from '../../components/charts/TrajectoryChart';
 import PillarPanel from '../../components/charts/PillarPanel';
+import { useRadarFavorites } from '../../hooks/useRadarFavorites';
 
 export default function TechnologyDetail() {
   const { techId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const city = searchParams.get('city') || undefined;
+  const scale = parseFloat(searchParams.get('scale')) || 1;
   const [tech, setTech] = useState(null);
+  const { isFavorite, toggleFavorite } = useRadarFavorites();
 
   useEffect(() => {
-    api.technology(techId, city).then(setTech).catch(() => {});
-  }, [techId, city]);
+    api.technology(techId, city, scale).then(setTech).catch(() => {});
+  }, [techId, city, scale]);
 
   if (!tech) {
     return <div className="fade-in" style={{ padding: 'var(--sp-16) 0', textAlign: 'center', color: 'var(--text-tertiary)' }}>Loading…</div>;
@@ -30,7 +33,16 @@ export default function TechnologyDetail() {
 
       {/* ── Header ── */}
       <div className="detail-header">
-        <h1 className="detail-title">{tech.name}</h1>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-4)' }}>
+          <h1 className="detail-title">{tech.name}</h1>
+          <button
+            className={isFavorite(tech.id) ? 'btn-secondary btn-untrack' : 'btn-primary'}
+            style={{ height: 32, padding: '0 14px', fontSize: '0.75rem', flexShrink: 0 }}
+            onClick={() => toggleFavorite(tech.id)}
+          >
+            {isFavorite(tech.id) ? 'Untrack' : 'Track'}
+          </button>
+        </div>
         <p className="detail-desc">{tech.description}</p>
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <span className="text-overline">{tech.category}</span>
@@ -39,11 +51,42 @@ export default function TechnologyDetail() {
       </div>
 
       {/* ── Summary Pillars ── */}
-      <div className="pillar-grid" style={{ marginBottom: 'var(--sp-8)' }}>
+      <div className="pillar-grid" style={{ marginBottom: 'var(--sp-4)' }}>
         <PillarPanel type="power" data={tech.power} />
         <PillarPanel type="pollution" data={tech.pollution} />
         <PillarPanel type="water" data={tech.water} />
       </div>
+
+      {/* ── Cost Summary ── */}
+      {tech.cost && (
+        <div
+          style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-primary)',
+            borderRadius: 'var(--radius-lg)',
+            padding: 'var(--sp-4) var(--sp-5)',
+            marginBottom: 'var(--sp-8)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--sp-6)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <div className="text-overline" style={{ marginRight: 'auto' }}>Deployment Cost</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>Units</div>
+            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{tech.cost.units.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>Per Unit</div>
+            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>${tech.cost.perUnit < 1 ? `${(tech.cost.perUnit * 1000).toFixed(0)}K` : `${tech.cost.perUnit.toLocaleString()}M`}</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-tertiary)' }}>Total</div>
+            <div style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>${tech.cost.total >= 1000 ? `${(tech.cost.total / 1000).toFixed(1)}B` : `${tech.cost.total.toFixed(0)}M`}</div>
+          </div>
+        </div>
+      )}
 
       {/* ── Trajectory Charts ── */}
       <div className="detail-section">

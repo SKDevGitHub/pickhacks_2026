@@ -5,9 +5,9 @@
         "significance": "They are becoming core infrastructure for national competitiveness, scientific research, and next-generation digital services.",
         "valueAdd": "AI campuses can accelerate innovation, create high-skilled jobs, and improve public and private sector decision-making through stronger AI capability."
     },
-    "power_usage": 500,
-    "water_usage": 8.0,
-    "co2_emissions": 200,
-    "annual_growth_pct": 3.0,
-    "cost of implementation": 15.00
+    "power_usage": 500000000,
+    "water_usage": 250000,
+    "co2_emissions": 200000000,
+    "units_per_million_pop": 2,
+    "cost of implementation": 1000
 }
