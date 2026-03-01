@@ -12,7 +12,6 @@
         "pm25_concentration": 9.0,
         "avg_growth_rate": 0.2
     },
-<<<<<<< HEAD
     "time_series": [
         {
             "year": 2017,
@@ -219,69 +218,4 @@
             "co2_kg": 4085956
         }
     ]
-=======
-    
-  "time_series": [
-    {
-      "year": 2017,
-      "power_kwh": 9684120,
-      "water_kgal": 10647050.0,
-      "co2_kg": 3873648
-    },
-    {
-      "year": 2018,
-      "power_kwh": 9771760,
-      "water_kgal": 10599600.0,
-      "co2_kg": 3908704
-    },
-    {
-      "year": 2019,
-      "power_kwh": 9723720,
-      "water_kgal": 10524410.0,
-      "co2_kg": 3889488
-    },
-    {
-      "year": 2020,
-      "power_kwh": 9794790,
-      "water_kgal": 10487910.0,
-      "co2_kg": 3917916
-    },
-    {
-      "year": 2021,
-      "power_kwh": 9788160,
-      "water_kgal": 10307600.0,
-      "co2_kg": 3915264
-    },
-    {
-      "year": 2022,
-      "power_kwh": 9832500,
-      "water_kgal": 10285335.0,
-      "co2_kg": 3933000
-    },
-    {
-      "year": 2023,
-      "power_kwh": 9794970,
-      "water_kgal": 9830910.0,
-      "co2_kg": 3917988
-    },
-    {
-      "year": 2024,
-      "power_kwh": 9819160,
-      "water_kgal": 9911940.0,
-      "co2_kg": 3927664
-    },
-    {
-      "year": 2025,
-      "power_kwh": 9798730,
-      "water_kgal": 10006110.0,
-      "co2_kg": 3919492
-    },
-    {
-      "year": 2026,
-      "power_kwh": 9879280,
-      "water_kgal": 9796235.0,
-      "co2_kg": 3951712
-    }
-  ] 
->>>>>>> e8f6d108086788f9fb4619157de76ec70d36e399
 }
