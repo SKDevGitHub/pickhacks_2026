@@ -150,9 +150,9 @@ export default function AskGemini() {
             <div className="chat-header">
                 <div className="chat-header-icon">✦</div>
                 <div>
-                    <h1 className="chat-header-title">Ask Gemini</h1>
+                    <h1 className="chat-header-title">Chartr AI</h1>
                     <p className="chat-header-subtitle">
-                        AI-powered environmental technology advisor · Backed by Chartr data
+                        AI-powered environmental technology advisor · Powered by Google Gemini
                     </p>
                 </div>
             </div>
