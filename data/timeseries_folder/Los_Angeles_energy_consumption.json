@@ -1,0 +1,568 @@
+{
+      "Los Angeles, CA": {
+    "water": {
+      "2017": {
+        "total_mgd": 443.911,
+        "per_capita_gpd": 111.4,
+        "population": 3985000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2018": {
+        "total_mgd": 441.218,
+        "per_capita_gpd": 110.6,
+        "population": 3990000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2019": {
+        "total_mgd": 438.517,
+        "per_capita_gpd": 109.8,
+        "population": 3995000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2020": {
+        "total_mgd": 435.807,
+        "per_capita_gpd": 109.0,
+        "population": 4000000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2021": {
+        "total_mgd": 433.09,
+        "per_capita_gpd": 108.1,
+        "population": 4005000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2022": {
+        "total_mgd": 430.364,
+        "per_capita_gpd": 107.3,
+        "population": 4010000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2023": {
+        "total_mgd": 427.63,
+        "per_capita_gpd": 106.5,
+        "population": 4015000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2024": {
+        "total_mgd": 424.888,
+        "per_capita_gpd": 105.7,
+        "population": 4020000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2025": {
+        "total_mgd": 422.137,
+        "per_capita_gpd": 104.9,
+        "population": 4025000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      },
+      "2026": {
+        "total_mgd": 419.379,
+        "per_capita_gpd": 104.1,
+        "population": 4030000,
+        "source": "synthetic \u2014 modelled from population \u00d7 GPCD trend"
+      }
+    },
+    "electricity": {
+      "2017": {
+        "01": {
+          "electricity_gwh": 3397.39,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3267.01,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3354.66,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3371.63,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3647.05,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 3968.62,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4306.3,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4479.02,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4116.5,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3787.38,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3558.66,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3598.4,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2018": {
+        "01": {
+          "electricity_gwh": 3424.74,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3350.63,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3318.36,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3404.01,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3675.35,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4058.39,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4396.14,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4486.46,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4255.24,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3762.03,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3662.17,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3638.24,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2019": {
+        "01": {
+          "electricity_gwh": 3412.86,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3296.45,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3353.64,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3482.39,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3644.41,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4034.47,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4426.29,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4505.59,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4222.31,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3782.7,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3593.22,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3647.2,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2020": {
+        "01": {
+          "electricity_gwh": 3485.69,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3344.08,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3370.98,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3475.82,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3692.86,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4020.45,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4469.08,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4572.66,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4204.82,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3860.74,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3662.3,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3739.67,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2021": {
+        "01": {
+          "electricity_gwh": 3508.24,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3346.69,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3455.91,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3444.34,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3707.41,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4096.33,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4405.63,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4566.74,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4199.67,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3890.94,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3707.02,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3724.69,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2022": {
+        "01": {
+          "electricity_gwh": 3541.12,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3366.04,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3443.93,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3511.59,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3744.08,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4079.93,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4520.0,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4652.34,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4276.51,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3909.92,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3647.5,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3757.7,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2023": {
+        "01": {
+          "electricity_gwh": 3534.72,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3452.21,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3474.22,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3496.45,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3740.94,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4126.49,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4432.33,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4608.75,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4258.4,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3865.29,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3665.55,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3784.01,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2024": {
+        "01": {
+          "electricity_gwh": 3497.46,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3393.01,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3446.88,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3576.19,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3725.1,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4119.96,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4525.93,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4690.45,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4364.14,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3972.67,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3708.46,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3762.98,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2025": {
+        "01": {
+          "electricity_gwh": 3539.41,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3475.59,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3523.21,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3517.25,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3754.61,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4113.53,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4505.49,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4658.2,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4355.97,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 3921.3,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3696.12,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3782.21,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      },
+      "2026": {
+        "01": {
+          "electricity_gwh": 3558.23,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "02": {
+          "electricity_gwh": 3460.04,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "03": {
+          "electricity_gwh": 3540.34,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "04": {
+          "electricity_gwh": 3592.66,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "05": {
+          "electricity_gwh": 3812.16,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "06": {
+          "electricity_gwh": 4182.32,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "07": {
+          "electricity_gwh": 4588.66,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "08": {
+          "electricity_gwh": 4620.94,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "09": {
+          "electricity_gwh": 4418.4,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "10": {
+          "electricity_gwh": 4002.49,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "11": {
+          "electricity_gwh": 3813.06,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        },
+        "12": {
+          "electricity_gwh": 3844.44,
+          "source": "synthetic \u2014 anchored to utility territory annual totals w/ seasonal profile"
+        }
+      }
+    }
+  }
+}

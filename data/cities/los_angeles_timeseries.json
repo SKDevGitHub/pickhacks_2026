@@ -1,0 +1,79 @@
+{
+    "source": "Los Angeles, California, United States",
+    
+    "power": {
+        "power_consumption": 44440000000,
+        "avg_growth_rate": 2.5
+    },
+    "water": {
+        "water_consumption": 146000000000,
+        "avg_growth_rate": 1.8
+    },
+    "air_pollution": {
+        "pm25_concentration": 7.0,
+        "avg_growth_rate": -0.5
+    },
+  "time_series": [
+    {
+      "year": 2017,
+      "power_kwh": 44852620,
+      "water_kgal": 162027515.0,
+      "co2_kg": 17941048
+    },
+    {
+      "year": 2018,
+      "power_kwh": 45431760,
+      "water_kgal": 161044570.0,
+      "co2_kg": 18172704
+    },
+    {
+      "year": 2019,
+      "power_kwh": 45401530,
+      "water_kgal": 160058705.0,
+      "co2_kg": 18160612
+    },
+    {
+      "year": 2020,
+      "power_kwh": 45899150,
+      "water_kgal": 159069555.0,
+      "co2_kg": 18359660
+    },
+    {
+      "year": 2021,
+      "power_kwh": 46053610,
+      "water_kgal": 158077850.0,
+      "co2_kg": 18421444
+    },
+    {
+      "year": 2022,
+      "power_kwh": 46450660,
+      "water_kgal": 157082860.0,
+      "co2_kg": 18580264
+    },
+    {
+      "year": 2023,
+      "power_kwh": 46439360,
+      "water_kgal": 156084950.0,
+      "co2_kg": 18575744
+    },
+    {
+      "year": 2024,
+      "power_kwh": 46783230,
+      "water_kgal": 155084120.0,
+      "co2_kg": 18713292
+    },
+    {
+      "year": 2025,
+      "power_kwh": 46842890,
+      "water_kgal": 154080005.0,
+      "co2_kg": 18737156
+    },
+    {
+      "year": 2026,
+      "power_kwh": 47433740,
+      "water_kgal": 153073335.0,
+      "co2_kg": 18973496
+    }
+  ]
+
+}
