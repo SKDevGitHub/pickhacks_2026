@@ -7,7 +7,7 @@ import csv
 import json
 import os
 import re
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 import httpx
@@ -19,6 +19,8 @@ app = FastAPI(
     description="Serves power, water, and pollution data for one or more cities.",
     version="1.0.0",
 )
+
+api = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -162,34 +164,34 @@ async def stream_elevenlabs(text: str):
 
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
-@app.get("/cities", summary="List all available cities")
+@api.get("/cities", summary="List all available cities")
 def get_cities():
     """Returns a list of all cities that have data files loaded."""
     cities = list_cities()
     return {"cities": cities, "count": len(cities)}
 
 
-@app.get("/cities/{city}", summary="Get full data for a city")
+@api.get("/cities/{city}", summary="Get full data for a city")
 def get_city(city: str):
     """Returns all metrics (power, water, pollution) for the given city."""
     return load_city(city)
 
 
-@app.get("/cities/{city}/power", summary="Get power usage for a city")
+@api.get("/cities/{city}/power", summary="Get power usage for a city")
 def get_city_power(city: str):
     """Returns electricity usage totals for the given city."""
     data = load_city(city)
     return {"city": city, "power_usage": data["power_usage"]}
 
 
-@app.get("/cities/{city}/water", summary="Get water usage for a city")
+@api.get("/cities/{city}/water", summary="Get water usage for a city")
 def get_city_water(city: str):
     """Returns water usage totals for the given city."""
     data = load_city(city)
     return {"city": city, "water_usage": data["water_usage"]}
 
 
-@app.get("/cities/{city}/pollution", summary="Get pollution data for a city")
+@api.get("/cities/{city}/pollution", summary="Get pollution data for a city")
 def get_city_pollution(city: str):
     """Returns GHG emissions totals for the given city."""
     data = load_city(city)
@@ -198,7 +200,7 @@ def get_city_pollution(city: str):
 
 # ── Forecast routes ────────────────────────────────────────────────────────────
 
-@app.get(
+@api.get(
     "/forecast",
     summary="Get per-intersection forecast (2023–2050)",
 )
@@ -225,7 +227,7 @@ def get_forecast_per_intersection(
     }
 
 
-@app.get(
+@api.get(
     "/cities/{city}/forecast",
     summary="Get city-scaled AI forecast (2023–2050)",
 )
@@ -279,8 +281,8 @@ def get_city_forecast(
 
 # ── Article audio route ────────────────────────────────────────────────────────
 
-@app.get(
-    "/api/articles/{article_id}/audio",
+@api.get(
+    "/articles/{article_id}/audio",
     summary="Stream ElevenLabs TTS narration for a news article",
 )
 async def get_article_audio(article_id: str):

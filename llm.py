@@ -188,6 +188,13 @@ def intersections(city: str, state: str) -> int:
     db.cache_intersections(city, state, round(int(spm * land_area)))
     return round(spm * land_area)
 
+"""
+gemini
+5-10 y hist data + YTD of water/~~air~~/power consump. / city
+"""
+def epa(city, state, section):
+    pass
+
 if __name__ == '__main__':
     print("running tests:")
     print(f"new york intersections: {intersections('New York', 'NY')}")
@@ -198,3 +205,4 @@ if __name__ == '__main__':
     print(f"springfield (mo) intersections: {intersections('Springfield', 'MO')}")
     print(f"stl/mo intersections: {intersections('St. Louis', 'MO')}")
     print(f"la intersections: {intersections('Los Angeles', 'CA')}")
+    print(f"jefferson city intersections: {intersections('Jefferson City', 'MO')}")
