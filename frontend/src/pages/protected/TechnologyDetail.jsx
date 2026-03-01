@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import TrajectoryChart from '../../components/TrajectoryChart';
-import PillarPanel from '../../components/PillarPanel';
+import TrajectoryChart from '../../components/charts/TrajectoryChart';
+import PillarPanel from '../../components/charts/PillarPanel';
 
 export default function TechnologyDetail() {
   const { techId } = useParams();

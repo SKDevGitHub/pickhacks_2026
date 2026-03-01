@@ -188,8 +188,7 @@ def _is_edu_email(email: str) -> bool:
 
 
 async def require_edu_email(token_payload: dict = Depends(verify_token)) -> dict:
-    """Authorization dependency — requires a verified .edu email address."""
-    email = str(token_payload.get("email", "")).strip().lower()
+    email = _extract_claim(token_payload, "email")  # ← use this instead of .get()
     if not _is_edu_email(email):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

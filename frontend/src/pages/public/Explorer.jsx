@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth0 } from '@auth0/auth0-react';
 import { api } from '../../api';
-import PillarPanel from '../../components/PillarPanel';
+import PillarPanel from '../../components/charts/PillarPanel';
 import { useRadarFavorites } from '../../hooks/useRadarFavorites';
 
 const HORIZON_OPTIONS = ['', '12m', '24m', '36m'];

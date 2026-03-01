@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import PillarPanel from '../../components/PillarPanel';
+import PillarPanel from '../../components/charts/PillarPanel';
 import { useRadarFavorites } from '../../hooks/useRadarFavorites';
 
 export default function Radar() {
