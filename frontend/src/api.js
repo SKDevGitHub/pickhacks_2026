@@ -58,6 +58,13 @@ export const api = {
   alerts: () => fetchJSON('/alerts'),
   regions: () => fetchJSON('/regions'),
   cities: () => fetchJSON('/cities'),
+  budget: (city, scale) => {
+    const qs = new URLSearchParams();
+    if (city) qs.set('city', city);
+    if (scale != null && scale !== 1) qs.set('scale', scale);
+    const q = qs.toString();
+    return fetchJSON(`/budget${q ? '?' + q : ''}`);
+  },
   simulate: (params) => {
     const qs = new URLSearchParams(params).toString();
     return fetchJSON(`/scenarios/simulate?${qs}`);

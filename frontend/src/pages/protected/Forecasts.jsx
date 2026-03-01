@@ -23,10 +23,11 @@ export default function Forecasts() {
   // Re-fetch categories whenever the selected city or scale changes
   useEffect(() => {
     if (!selectedCityId) return;
-    api.categories(selectedCityId, scale).then(setCategories).catch(() => {});
+    const cityParam = selectedCityId === '_average' ? undefined : selectedCityId;
+    api.categories(cityParam, scale).then(setCategories).catch(() => {});
   }, [selectedCityId, scale]);
 
-  const selectedCity = cities.find((city) => city.id === selectedCityId) || null;
+  const selectedCity = selectedCityId === '_average' ? null : cities.find((city) => city.id === selectedCityId) || null;
 
   const formatValue = (value) => {
     if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
@@ -76,6 +77,7 @@ export default function Forecasts() {
               padding: '0 var(--sp-3)',
             }}
           >
+            <option value="_average">Average (all cities)</option>
             {cities.map((city) => (
               <option key={city.id} value={city.id}>
                 {city.name}
@@ -182,7 +184,7 @@ export default function Forecasts() {
                   <div className="tech-card-desc">{tech.description}</div>
                 </div>
                 {tech.scaling && (
-                  <div style={{ display: 'flex', gap: 'var(--sp-4)', padding: '0 var(--sp-4)', flexWrap: 'wrap', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                  <div style={{ gridColumn: '1 / -1', paddingTop: 'var(--sp-1)', display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
                     <span style={{ color: 'var(--text-tertiary)' }}>
                       {tech.scaling.method === 'intersections'
                         ? `Scales by intersections`
@@ -194,7 +196,47 @@ export default function Forecasts() {
                     <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>${tech.cost.total >= 1000 ? `${(tech.cost.total / 1000).toFixed(1)}B` : `${formatValue(tech.cost.total)}M`}</span>
                   </div>
                 )}
-                <div className="tech-card-pillars">
+                {/* ── Budget bar ── */}
+                {selectedCity && selectedCity.cityFunds > 0 && tech.cost && (() => {
+                  const pct = (tech.cost.total / selectedCity.cityFunds) * 100;
+                  const barWidth = Math.min(pct, 100);
+                  const costLabel = tech.cost.total >= 1000
+                    ? `$${(tech.cost.total / 1000).toFixed(1)}B`
+                    : `$${formatValue(tech.cost.total)}M`;
+                  return (
+                    <div style={{ gridColumn: '1 / -1', paddingTop: 'var(--sp-1)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-tertiary)' }}>City Budget Impact</span>
+                        <span style={{
+                          fontSize: '0.7rem',
+                          fontVariantNumeric: 'tabular-nums',
+                          fontWeight: pct > 25 ? 600 : 400,
+                          color: pct > 100 ? '#e74c3c' : pct > 25 ? '#f39c12' : 'var(--text-secondary)',
+                        }}>
+                          {costLabel} · {pct.toFixed(1)}% of budget
+                        </span>
+                      </div>
+                      <div style={{
+                        position: 'relative',
+                        height: 10,
+                        background: 'var(--bg-elevated)',
+                        borderRadius: 'var(--radius-sm)',
+                        overflow: 'hidden',
+                        border: '1px solid var(--border-primary)',
+                      }}>
+                        <div style={{
+                          width: `${barWidth}%`,
+                          height: '100%',
+                          background: pct > 100 ? '#e74c3c' : pct > 25 ? '#f39c12' : 'var(--power-color)',
+                          opacity: 0.85,
+                          borderRadius: 'var(--radius-sm)',
+                          transition: 'width 0.3s ease',
+                        }} />
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div className="tech-card-pillars" style={{ gridColumn: '1 / -1', marginTop: 'var(--sp-3)' }}>
                   <PillarPanel type="power" data={tech.power} compact />
                   <PillarPanel type="pollution" data={tech.pollution} compact />
                   <PillarPanel type="water" data={tech.water} compact />

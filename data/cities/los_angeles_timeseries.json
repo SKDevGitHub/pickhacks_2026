@@ -3,6 +3,7 @@
     "city": "Los Angeles",
     "population": 3881041,
     "intersections": 4850,
+    "city_funds": 13000,
     "time_series": [
         {
             "year": 2017,

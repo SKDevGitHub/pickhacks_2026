@@ -183,6 +183,7 @@ def _load_city_timeseries() -> tuple[dict[str, list[dict]], dict[str, dict]]:
         meta[city_id] = {
             "population": int(payload.get("population", 0)),
             "intersections": int(payload.get("intersections", 0)),
+            "city_funds": float(payload.get("city_funds", 0)),
         }
 
     return cities, meta
@@ -611,3 +612,35 @@ def _build_drivers(tech: dict) -> list[dict]:
         {"label": driver_labels.get("waterGrowth", "Water Growth"), "value": f"{tech['water']['delta']:+.1f}%"},
         {"label": driver_labels.get("pollutionGrowth", "Pollution Growth"), "value": f"{tech['pollution']['delta']:+.1f}%"},
     ]
+
+
+def get_city_meta(city: str | None = None) -> dict:
+    """Return metadata (population, intersections, city_funds) for a city."""
+    if not city:
+        return _AVG_CITY_META
+    cid = re.sub(r"[^a-z0-9]+", "-", city.lower()).strip("-")
+    return _ALL_CITY_META.get(cid, _AVG_CITY_META)
+
+
+def get_budget_breakdown(city: str | None = None, scale: float = 1.0) -> dict:
+    """Return city budget vs total tech deployment cost."""
+    cm = get_city_meta(city)
+    city_funds = cm.get("city_funds", 0)
+    techs = get_all_technologies_flat(city, scale)
+    items = []
+    total_cost = 0.0
+    for t in techs:
+        cost = t.get("cost", {}).get("total", 0)
+        total_cost += cost
+        items.append({
+            "id": t["id"],
+            "name": t["name"],
+            "cost": round(cost, 2),
+        })
+    items.sort(key=lambda x: x["cost"], reverse=True)
+    return {
+        "cityFunds": city_funds,
+        "totalTechCost": round(total_cost, 2),
+        "pctOfBudget": round((total_cost / city_funds) * 100, 1) if city_funds else 0,
+        "technologies": items,
+    }

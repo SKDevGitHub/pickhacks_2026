@@ -3,6 +3,7 @@
     "city": "St. Louis",
     "population": 298018,
     "intersections": 400,
+    "city_funds": 1200,
     "time_series": [
         {
             "year": 2017,

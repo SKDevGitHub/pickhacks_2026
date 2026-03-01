@@ -3,6 +3,7 @@
     "city": "New York",
     "population": 8622467,
     "intersections": 12500,
+    "city_funds": 107000,
     "time_series": [
         {
             "year": 2017,

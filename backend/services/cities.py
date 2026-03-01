@@ -62,6 +62,7 @@ def _normalize_city_stats(city_name: str, payload: dict) -> dict:
         "name": city_name,
         "source": payload.get("source", "Unknown source"),
         "intersections": int(payload.get("intersections", 0) or 0),
+        "cityFunds": _safe_float(payload.get("city_funds", 0)),
         "stats": {
             "power": {
                 "value": power_value,

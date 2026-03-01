@@ -9,20 +9,49 @@ export default function TechnologyDetail() {
   const { techId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const city = searchParams.get('city') || undefined;
-  const scale = parseFloat(searchParams.get('scale')) || 1;
+
+  const [cities, setCities] = useState([]);
+  const [selectedCityId, setSelectedCityId] = useState(searchParams.get('city') || '');
+  const [scale, setScale] = useState(parseFloat(searchParams.get('scale')) || 1);
   const [tech, setTech] = useState(null);
   const { isFavorite, toggleFavorite } = useRadarFavorites();
 
+  /* Load city list once */
   useEffect(() => {
+    api.cities().then((data) => {
+      setCities(data);
+      if (!selectedCityId && data.length) setSelectedCityId(data[0].id);
+    }).catch(() => {});
+  }, []);
+
+  /* Re-fetch tech whenever city or scale changes */
+  useEffect(() => {
+    const city = selectedCityId === '_average' ? undefined : selectedCityId || undefined;
     api.technology(techId, city, scale).then(setTech).catch(() => {});
-  }, [techId, city, scale]);
+  }, [techId, selectedCityId, scale]);
 
   if (!tech) {
     return <div className="fade-in" style={{ padding: 'var(--sp-16) 0', textAlign: 'center', color: 'var(--text-tertiary)' }}>Loading…</div>;
   }
 
   const traj = tech.trajectory || {};
+
+  const formatValue = (value) => {
+    if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+    return value.toFixed(1);
+  };
+
+  const selectStyle = {
+    minWidth: 200,
+    height: 36,
+    background: 'var(--bg-elevated)',
+    color: 'var(--text-primary)',
+    border: '1px solid var(--border-primary)',
+    borderRadius: 'var(--radius-sm)',
+    padding: '0 var(--sp-3)',
+  };
 
   return (
     <div className="fade-in">
@@ -47,6 +76,46 @@ export default function TechnologyDetail() {
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <span className="text-overline">{tech.category}</span>
           <span className="text-overline">Region: {tech.region}</span>
+        </div>
+      </div>
+
+      {/* ── City & Scale Selectors ── */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-primary)',
+          borderRadius: 'var(--radius-lg)',
+          padding: 'var(--sp-4) var(--sp-5)',
+          marginBottom: 'var(--sp-6)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--sp-6)',
+          flexWrap: 'wrap',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+          <span className="text-overline" style={{ whiteSpace: 'nowrap' }}>City</span>
+          <select value={selectedCityId} onChange={(e) => setSelectedCityId(e.target.value)} style={selectStyle}>
+            <option value="_average">Average (all cities)</option>
+            {cities.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+          <span className="text-overline" style={{ whiteSpace: 'nowrap' }}>Scale</span>
+          <input
+            type="range"
+            min="0.1"
+            max="10"
+            step="0.1"
+            value={scale}
+            onChange={(e) => setScale(parseFloat(e.target.value))}
+            style={{ width: 160, accentColor: 'var(--power-color)' }}
+          />
+          <span style={{ minWidth: 42, fontVariantNumeric: 'tabular-nums', color: 'var(--text-primary)', fontSize: '0.85rem' }}>
+            {scale.toFixed(1)}×
+          </span>
         </div>
       </div>
 
@@ -130,27 +199,6 @@ export default function TechnologyDetail() {
           Solid lines represent observed data. Dotted lines are model
           projections. Shaded bands indicate uncertainty ranges.
         </p>
-      </div>
-
-      {/* ── Driver Breakdown ── */}
-      <div className="detail-section">
-        <h2 className="detail-section-title">Driver Breakdown</h2>
-        <div className="driver-breakdown">
-          {(tech.drivers || []).map((d, i) => (
-            <article key={i} className="driver-card">
-              <div className="driver-card-head">
-                <h3 className="driver-card-label">{d.label}</h3>
-                <span className="driver-card-value">{d.value}</span>
-              </div>
-              <div className="driver-card-meter" aria-hidden="true">
-                <span
-                  className="driver-card-meter-fill"
-                  style={{ width: `${Math.max(28, 100 - i * 12)}%` }}
-                />
-              </div>
-            </article>
-          ))}
-        </div>
       </div>
     </div>
   );

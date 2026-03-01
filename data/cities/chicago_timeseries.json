@@ -3,6 +3,7 @@
     "city": "Chicago",
     "population": 2721914,
     "intersections": 3035,
+    "city_funds": 16700,
     "time_series": [
         {
             "year": 2017,

@@ -3,6 +3,7 @@
     "city": "Phoenix",
     "population": 1609456,
     "intersections": 1300,
+    "city_funds": 5300,
     "time_series": [
         {
             "year": 2017,

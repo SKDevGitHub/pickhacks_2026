@@ -9,6 +9,7 @@ from data.technologies import (
     get_categories,
     get_all_technologies_flat,
     get_technology_by_id,
+    get_budget_breakdown,
 )
 from services.cities import load_cities
 
@@ -120,6 +121,12 @@ async def list_regions():
 async def list_cities():
     """List pre-loaded city stats for Forecasts city selector."""
     return load_cities()
+
+
+@router.get("/budget")
+async def budget_breakdown(city: Optional[str] = Query(None), scale: float = Query(1.0, ge=0.1, le=10.0)):
+    """Return city budget vs total tech deployment costs."""
+    return get_budget_breakdown(city, scale)
 
 
 @router.get("/scenarios/simulate")
