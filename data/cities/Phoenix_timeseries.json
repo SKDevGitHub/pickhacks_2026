@@ -1,0 +1,80 @@
+{
+    "source": "Phoenix, Arizona, United States",
+    
+    "power": {
+        "power_consumption": 24800000000,
+        "avg_growth_rate": 2.3
+    },
+    "water": {
+        "water_consumption": 110000000000,
+        "avg_growth_rate": 1.5
+    },
+    "air_pollution": {
+        "pm25_concentration": 9.0,
+        "avg_growth_rate": 0.1
+    },
+    
+  "time_series": [
+    {
+      "year": 2017,
+      "power_kwh": 22533990,
+      "water_kgal": 60714100.0,
+      "co2_kg": 9013596
+    },
+    {
+      "year": 2018,
+      "power_kwh": 23121320,
+      "water_kgal": 60526855.0,
+      "co2_kg": 9248528
+    },
+    {
+      "year": 2019,
+      "power_kwh": 23415890,
+      "water_kgal": 61368545.0,
+      "co2_kg": 9366356
+    },
+    {
+      "year": 2020,
+      "power_kwh": 23957010,
+      "water_kgal": 60875430.0,
+      "co2_kg": 9582804
+    },
+    {
+      "year": 2021,
+      "power_kwh": 24340760,
+      "water_kgal": 60738920.0,
+      "co2_kg": 9736304
+    },
+    {
+      "year": 2022,
+      "power_kwh": 24888400,
+      "water_kgal": 61630980.0,
+      "co2_kg": 9955360
+    },
+    {
+      "year": 2023,
+      "power_kwh": 25181740,
+      "water_kgal": 62954470.0,
+      "co2_kg": 10072696
+    },
+    {
+      "year": 2024,
+      "power_kwh": 25725690,
+      "water_kgal": 62689115.0,
+      "co2_kg": 10290276
+    },
+    {
+      "year": 2025,
+      "power_kwh": 26070580,
+      "water_kgal": 62607720.0,
+      "co2_kg": 10428232
+    },
+    {
+      "year": 2026,
+      "power_kwh": 26739790,
+      "water_kgal": 61248825.0,
+      "co2_kg": 10695916
+    }
+  ]
+  
+}
