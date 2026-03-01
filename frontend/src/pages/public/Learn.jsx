@@ -2,17 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { api } from '../../api';
 
-const CONCEPTS = [
-  {
-    title: 'Confidence Bands',
-    body: 'Shaded uncertainty ranges around projected values to avoid false precision.',
-  },
-  {
-    title: 'Scale Simulation',
-    body: 'Multiplier-based what-if tool to test how expansion affects the three pillars.',
-  },
-];
-
 export default function Learn() {
   const { isAuthenticated } = useAuth0();
   const [technologies, setTechnologies] = useState([]);
@@ -162,18 +151,6 @@ export default function Learn() {
       </div>
 
       <section className="learn-section">
-        <h2 className="section-title">How to Read Chartr AI</h2>
-        <div className="learn-concepts-grid">
-          {CONCEPTS.map((item) => (
-            <article key={item.title} className="learn-concept-card">
-              <h3>{item.title}</h3>
-              <p>{item.body}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="learn-section">
         <h2 className="section-title">Featured Emerging Technologies</h2>
         {petitionMessage && <p className="learn-petition-feedback">{petitionMessage}</p>}
         {loading ? (
@@ -198,12 +175,6 @@ export default function Learn() {
                 <div className="learn-detail-block">
                   <h4>Value it can add</h4>
                   <p>{tech.learn?.valueAdd || 'Value-add details are not available yet.'}</p>
-                </div>
-
-                <div className="learn-pillars-row">
-                  <span>Power {tech.power?.forecastIndex ?? '–'}</span>
-                  <span>Pollution {tech.pollution?.forecastIndex ?? '–'}</span>
-                  <span>Water {tech.water?.forecastIndex ?? '–'}</span>
                 </div>
 
                 {isAuthenticated && (

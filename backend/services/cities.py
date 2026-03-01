@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 
 
@@ -26,24 +27,35 @@ def _safe_float(value, default=0.0):
         return float(default)
 
 
+def _compute_avg_growth(series: list[dict], key: str) -> float:
+    """Compute average year-over-year growth rate from timeseries."""
+    if len(series) < 2:
+        return 0.0
+    rates = []
+    for i in range(1, len(series)):
+        prev = _safe_float(series[i - 1].get(key))
+        curr = _safe_float(series[i].get(key))
+        if prev != 0:
+            rates.append(((curr - prev) / prev) * 100.0)
+    return round(sum(rates) / len(rates), 2) if rates else 0.0
+
+
 def _normalize_city_stats(city_name: str, payload: dict) -> dict:
+    """Build city stats from timeseries data."""
     city_name = _normalize_city_name(city_name)
+    city_id = re.sub(r"[^a-z0-9]+", "-", city_name.lower()).strip("-")
 
-    power_block = payload.get("power_usage") or payload.get("power") or {}
-    water_block = payload.get("water_usage") or payload.get("water") or {}
-    pollution_block = payload.get("pollution") or payload.get("air_pollution") or {}
+    ts = payload.get("time_series", [])
 
-    power_value = power_block.get("total_electricity_kwh", power_block.get("power_consumption", 0))
-    water_value = water_block.get("total_water_kgal", water_block.get("water_consumption", 0))
-    pollution_value = pollution_block.get("total_ghg_mt_co2e", pollution_block.get("pm25_concentration", 0))
+    # Latest values from the most recent row
+    latest = ts[-1] if ts else {}
+    power_value = _safe_float(latest.get("power_kwh"))
+    water_value = _safe_float(latest.get("water_kgal"))
+    co2_value = _safe_float(latest.get("co2_kg"))
 
-    power_growth = power_block.get("avg_growth", power_block.get("avg_growth_rate", 0))
-    water_growth = water_block.get("avg_growth", water_block.get("avg_growth_rate", 0))
-    pollution_growth = pollution_block.get("avg_growth", pollution_block.get("avg_growth_rate", 0))
-
-    pollution_unit = "MtCO₂e" if "total_ghg_mt_co2e" in pollution_block else "PM2.5"
-
-    city_id = city_name.lower().replace(".", "").replace(" ", "-")
+    power_growth = _compute_avg_growth(ts, "power_kwh")
+    water_growth = _compute_avg_growth(ts, "water_kgal")
+    co2_growth = _compute_avg_growth(ts, "co2_kg")
 
     return {
         "id": city_id,
@@ -52,22 +64,22 @@ def _normalize_city_stats(city_name: str, payload: dict) -> dict:
         "intersections": int(payload.get("intersections", 0) or 0),
         "stats": {
             "power": {
-                "value": _safe_float(power_value),
+                "value": power_value,
                 "unit": "kWh",
-                "avgGrowth": _safe_float(power_growth),
+                "avgGrowth": power_growth,
             },
             "water": {
-                "value": _safe_float(water_value),
+                "value": water_value,
                 "unit": "kgal",
-                "avgGrowth": _safe_float(water_growth),
+                "avgGrowth": water_growth,
             },
             "pollution": {
-                "value": _safe_float(pollution_value),
-                "unit": pollution_unit,
-                "avgGrowth": _safe_float(pollution_growth),
+                "value": co2_value,
+                "unit": "kg CO₂",
+                "avgGrowth": co2_growth,
             },
         },
-        "timeSeries": payload.get("time_series", []),
+        "timeSeries": ts,
     }
 
 
@@ -79,7 +91,7 @@ def load_cities() -> list[dict]:
         return []
 
     cities_by_id = {}
-    for path in sorted(cities_dir.glob("*.json")):
+    for path in sorted(cities_dir.glob("*_timeseries.json")):
         try:
             payload = json.loads(path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
@@ -88,14 +100,7 @@ def load_cities() -> list[dict]:
         city_name = str(payload.get("city", "")).strip() or _city_name_from_filename(path)
         normalized = _normalize_city_stats(city_name, payload)
 
-        existing = cities_by_id.get(normalized["id"])
-        if not existing:
-            cities_by_id[normalized["id"]] = normalized
-            continue
-
-        existing_has_series = bool(existing.get("timeSeries"))
-        normalized_has_series = bool(normalized.get("timeSeries"))
-        if normalized_has_series and not existing_has_series:
+        if normalized["id"] not in cities_by_id:
             cities_by_id[normalized["id"]] = normalized
 
     return sorted(cities_by_id.values(), key=lambda city: city["name"])

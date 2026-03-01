@@ -1,19 +1,8 @@
 {
     "source": "NYC Local Law 84 - Building Energy & Water Disclosure",
     "city": "New York",
+    "population": 8622467,
     "intersections": 12500,
-    "power_usage": {
-        "total_electricity_kwh": 98810606488.1,
-        "avg_growth": 2.5
-    },
-    "water_usage": {
-        "total_water_kgal": 343274346.8,
-        "avg_growth": 2.7
-    },
-    "pollution": {
-        "total_ghg_mt_co2e": 86209590.45,
-        "avg_growth": 2.8
-    },
     "time_series": [
         {
             "year": 2017,

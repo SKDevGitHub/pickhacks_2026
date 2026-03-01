@@ -1,17 +1,8 @@
 {
     "source": "Phoenix, Arizona, United States",
-    "power": {
-        "power_consumption": 24800000000,
-        "avg_growth_rate": 2.3
-    },
-    "water": {
-        "water_consumption": 110000000000,
-        "avg_growth_rate": 1.5
-    },
-    "air_pollution": {
-        "pm25_concentration": 9.0,
-        "avg_growth_rate": 0.1
-    },
+    "city": "Phoenix",
+    "population": 1609456,
+    "intersections": 1300,
     "time_series": [
         {
             "year": 2017,

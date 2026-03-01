@@ -12,7 +12,6 @@ export default function Forecasts() {
   const { isFavorite, toggleFavorite } = useRadarFavorites();
 
   useEffect(() => {
-    api.categories().then(setCategories).catch(() => {});
     api
       .cities()
       .then((data) => {
@@ -21,6 +20,12 @@ export default function Forecasts() {
       })
       .catch(() => {});
   }, []);
+
+  // Re-fetch categories whenever the selected city changes
+  useEffect(() => {
+    if (!selectedCityId) return;
+    api.categories(selectedCityId).then(setCategories).catch(() => {});
+  }, [selectedCityId]);
 
   const selectedCity = cities.find((city) => city.id === selectedCityId) || null;
 
@@ -122,21 +127,21 @@ export default function Forecasts() {
             <div className="category-averages">
               <div className="avg-chip">
                 <span className="avg-chip-value" style={{ color: 'var(--power-color)' }}>
-                  {cat.averages.power}
+                  {formatValue(cat.averages.power)}
                 </span>
-                <span className="avg-chip-label">Power</span>
+                <span className="avg-chip-label">Avg Power (kWh)</span>
               </div>
               <div className="avg-chip">
                 <span className="avg-chip-value" style={{ color: 'var(--pollution-color)' }}>
-                  {cat.averages.pollution}
+                  {formatValue(cat.averages.pollution)}
                 </span>
-                <span className="avg-chip-label">Pollution</span>
+                <span className="avg-chip-label">Avg CO₂ (kg)</span>
               </div>
               <div className="avg-chip">
                 <span className="avg-chip-value" style={{ color: 'var(--water-color)' }}>
-                  {cat.averages.water}
+                  {formatValue(cat.averages.water)}
                 </span>
-                <span className="avg-chip-label">Water</span>
+                <span className="avg-chip-label">Avg Water (kgal)</span>
               </div>
             </div>
           </div>
@@ -147,7 +152,7 @@ export default function Forecasts() {
               <div
                 key={tech.id}
                 className="tech-card"
-                onClick={() => navigate(`/forecasts/${tech.id}`)}
+                onClick={() => navigate(`/forecasts/${tech.id}?city=${encodeURIComponent(selectedCityId)}`)}
               >
                 <div className="tech-card-info">
                   <div className="tech-card-name">{tech.name}</div>

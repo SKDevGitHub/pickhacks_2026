@@ -6,6 +6,15 @@ const PILLAR_CONF = {
   water: { label: 'Water', color: 'var(--water-color)', cls: 'pillar-water', hex: '#6b9a9a' },
 };
 
+function formatValue(value) {
+  if (value == null) return '–';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toFixed(1);
+}
+
 /**
  * Renders a single pillar mini-panel (Power, Pollution, or Water).
  *
@@ -14,6 +23,7 @@ const PILLAR_CONF = {
 export default function PillarPanel({ type, data, compact = false }) {
   const conf = PILLAR_CONF[type];
   const idx = data?.forecastIndex ?? 0;
+  const unit = data?.unit ?? '';
   const delta = data?.delta ?? 0;
 
   const deltaClass =
@@ -23,14 +33,17 @@ export default function PillarPanel({ type, data, compact = false }) {
   return (
     <div className="tech-pillar-cell">
       <span className={`pillar-label ${conf.cls}`}>{conf.label}</span>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+      <div className="pillar-value-row">
         <span className={`index-score ${compact ? 'index-score-sm' : ''}`} style={{ color: conf.color }}>
-          {idx}
+          {formatValue(idx)}
         </span>
-        <span className={`delta ${deltaClass}`}>
-          {arrow} {Math.abs(delta).toFixed(1)}
-        </span>
+        {unit && (
+          <span className="pillar-unit">{unit}</span>
+        )}
       </div>
+      <span className={`delta ${deltaClass}`}>
+        {arrow} {Math.abs(delta).toFixed(1)}% in 10 yr
+      </span>
       {data?.sparkline && (
         <SparklineChart data={data.sparkline} color={conf.hex} />
       )}

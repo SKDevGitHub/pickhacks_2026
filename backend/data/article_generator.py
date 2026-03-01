@@ -35,7 +35,7 @@ GEMINI_URL = (
 )
 SOURCE_MAX_AGE_YEARS = int(os.getenv("ARTICLE_SOURCE_MAX_AGE_YEARS", "6"))
 MAX_VALIDATED_SOURCES = int(os.getenv("ARTICLE_MAX_VALIDATED_SOURCES", "4"))
-MIN_VALIDATED_SOURCES = int(os.getenv("ARTICLE_MIN_VALIDATED_SOURCES", "2"))
+MIN_VALIDATED_SOURCES = int(os.getenv("ARTICLE_MIN_VALIDATED_SOURCES", "1"))
 HTTP_HEADERS = {
     "User-Agent": "TechSignalsArticleBot/1.0 (contact: local-dev)",
 }
@@ -911,6 +911,20 @@ def generate_article(tech_stem: Optional[str] = None) -> dict:
     validated_sources = _discover_validated_sources(tech_stem, techs)
     image_query = tech_stem.replace("_", " ") if tech_stem else "emerging technology sustainability"
     free_image = _find_free_image(image_query)
+
+    # If no external sources found, fall back to the tech's own source URL
+    if not validated_sources and techs:
+        for t in techs:
+            src_url = t.get("source", "")
+            if src_url:
+                validated_sources.append({
+                    "title": t.get("_name", tech_stem or "Technology"),
+                    "url": src_url,
+                    "publishedAt": "",
+                    "publisher": "",
+                    "sourceType": "tech_config",
+                })
+                break
 
     if len(validated_sources) < MIN_VALIDATED_SOURCES:
         target = tech_stem.replace("_", " ") if tech_stem else "general roundup"

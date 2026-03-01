@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import TrajectoryChart from '../../components/charts/TrajectoryChart';
 import PillarPanel from '../../components/charts/PillarPanel';
@@ -7,11 +7,13 @@ import PillarPanel from '../../components/charts/PillarPanel';
 export default function TechnologyDetail() {
   const { techId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const city = searchParams.get('city') || undefined;
   const [tech, setTech] = useState(null);
 
   useEffect(() => {
-    api.technology(techId).then(setTech).catch(() => {});
-  }, [techId]);
+    api.technology(techId, city).then(setTech).catch(() => {});
+  }, [techId, city]);
 
   if (!tech) {
     return <div className="fade-in" style={{ padding: 'var(--sp-16) 0', textAlign: 'center', color: 'var(--text-tertiary)' }}>Loading…</div>;

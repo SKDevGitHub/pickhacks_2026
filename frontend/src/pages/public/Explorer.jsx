@@ -14,7 +14,6 @@ export default function Explorer() {
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [sortBy, setSortBy] = useState('power');
   const { isFavorite, toggleFavorite } = useRadarFavorites();
 
   useEffect(() => {
@@ -27,9 +26,8 @@ export default function Explorer() {
     const params = {};
     if (search) params.search = search;
     if (category) params.category = category;
-    if (sortBy) params.sortBy = sortBy;
     api.technologies(params).then(setTechnologies).catch(() => {});
-  }, [search, category, sortBy]);
+  }, [search, category]);
 
   const openForecastDetail = (techId) => {
     if (!eduAllowed) return;
@@ -63,15 +61,6 @@ export default function Explorer() {
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-          <span className="filter-label">Sort</span>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="power">Power Intensity</option>
-            <option value="pollution">Emission Impact</option>
-            <option value="water">Water Stress</option>
           </select>
         </div>
       </div>

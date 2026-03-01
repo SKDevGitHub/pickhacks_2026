@@ -2,21 +2,28 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../api';
 import TrajectoryChart from '../../components/charts/TrajectoryChart';
 
+function formatValue(value) {
+  if (value == null) return '–';
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`;
+  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
+  return value.toFixed(1);
+}
+
 export default function Scenarios() {
   const [technologies, setTechnologies] = useState([]);
   const [regions, setRegions] = useState([]);
 
   // Scenario A
   const [techA, setTechA] = useState('');
-  const [regionA, setRegionA] = useState('Global');
-  const [scaleA, setScaleA] = useState(1.0);
+  const [regionA, setRegionA] = useState('');
   const [simA, setSimA] = useState(null);
 
   // Scenario B (comparison)
   const [compare, setCompare] = useState(false);
   const [techB, setTechB] = useState('');
-  const [regionB, setRegionB] = useState('Global');
-  const [scaleB, setScaleB] = useState(1.0);
+  const [regionB, setRegionB] = useState('');
   const [simB, setSimB] = useState(null);
 
   useEffect(() => {
@@ -25,21 +32,28 @@ export default function Scenarios() {
       if (t.length > 0) setTechA(t[0].id);
       if (t.length > 1) setTechB(t[1].id);
     });
-    api.regions().then(setRegions);
+    api.regions().then((r) => {
+      const filtered = r.filter((name) => name !== 'Global');
+      setRegions(filtered);
+      if (filtered.length > 0) {
+        setRegionA(filtered[0]);
+        setRegionB(filtered[0]);
+      }
+    });
   }, []);
 
   const runSim = useCallback(async () => {
     if (techA) {
-      const a = await api.simulate({ techId: techA, region: regionA, scale: scaleA });
+      const a = await api.simulate({ techId: techA, region: regionA, scale: 1.0 });
       setSimA(a);
     }
     if (compare && techB) {
-      const b = await api.simulate({ techId: techB, region: regionB, scale: scaleB });
+      const b = await api.simulate({ techId: techB, region: regionB, scale: 1.0 });
       setSimB(b);
     } else {
       setSimB(null);
     }
-  }, [techA, regionA, scaleA, compare, techB, regionB, scaleB]);
+  }, [techA, regionA, compare, techB, regionB]);
 
   // Auto-run on param change
   useEffect(() => {
@@ -104,18 +118,6 @@ export default function Scenarios() {
               ))}
             </select>
           </div>
-          <div className="control-group">
-            <label className="control-label">Scale ({scaleA.toFixed(1)}×)</label>
-            <input
-              type="range"
-              min="0.1"
-              max="5"
-              step="0.1"
-              value={scaleA}
-              onChange={(e) => setScaleA(parseFloat(e.target.value))}
-              style={{ height: 40 }}
-            />
-          </div>
         </div>
 
         {/* Scenario B (if comparing) */}
@@ -140,18 +142,6 @@ export default function Scenarios() {
                 ))}
               </select>
             </div>
-            <div className="control-group">
-              <label className="control-label">Scale ({scaleB.toFixed(1)}×)</label>
-              <input
-                type="range"
-                min="0.1"
-                max="5"
-                step="0.1"
-                value={scaleB}
-                onChange={(e) => setScaleB(parseFloat(e.target.value))}
-                style={{ height: 40 }}
-              />
-            </div>
           </>
         )}
       </div>
@@ -165,9 +155,9 @@ export default function Scenarios() {
               {compare && simB ? ` vs ${simB.technology}` : ''}
             </span>
             <span className="text-caption" style={{ marginLeft: 'var(--sp-3)' }}>
-              {simA.region} · {simA.scale}× deployment
+              {simA.region}
               {compare && simB
-                ? ` | ${simB.region} · ${simB.scale}× deployment`
+                ? ` | ${simB.region}`
                 : ''}
             </span>
           </div>
@@ -194,7 +184,7 @@ export default function Scenarios() {
                         className="text-caption"
                         style={{ marginLeft: 'var(--sp-3)', textTransform: 'none' }}
                       >
-                        Index: {simA.metrics[dim].forecastIndex}
+                        Index: {formatValue(simA.metrics[dim].forecastIndex)} {simA.metrics[dim].unit || ''}
                       </span>
                     )}
                   </div>

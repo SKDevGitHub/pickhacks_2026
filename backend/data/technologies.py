@@ -1,15 +1,13 @@
 """
 Technology data loader for Chartr AI.
 
-Each technology JSON in data/emergent_tech/ MUST include a ``time_series``
-array.  Every row has:
+Technology metadata comes from data/emergent_tech/*.json (source, learn info,
+static resource values).  Time-series data comes from data/cities/*_timeseries.json
+which contain yearly {year, power_kwh, water_kgal, co2_kg} rows.
 
-    { "year": 2023, "power_kwh": 82, "water_kgal": 0.85, "co2_kg": 32,
-      "data_type": "historical"|"forecast", "scenario": "actual"|"baseline",
-      "confidence": 1.0 }
-
-Sparklines, index scores, deltas, and trajectory charts are all computed
-directly from this real data — no synthetic generation.
+Each technology is allocated a proportional share of a city's environmental
+footprint based on its static resource values.  The Explorer view uses the
+average across all cities; the Forecasts view uses a single city.
 """
 
 from __future__ import annotations
@@ -23,6 +21,9 @@ ROOT_DIR = Path(__file__).resolve().parents[2]
 EMERGENT_TECH_DIR = ROOT_DIR / "data" / "emergent_tech"
 CITIES_DIR = ROOT_DIR / "data" / "cities"
 TECH_CONFIG_PATH = ROOT_DIR / "data" / "technology_config.json"
+
+CURRENT_YEAR = datetime.now().year
+HISTORICAL_CUTOFF = CURRENT_YEAR  # years <= this are "historical"
 
 
 # ── Config ────────────────────────────────────────────────────────────────
@@ -137,57 +138,179 @@ def _category_for_stem(stem: str) -> tuple[str, str, str]:
     )
 
 
-# ── Timeseries helpers ────────────────────────────────────────────────────
+# ── City timeseries loader ───────────────────────────────────────────────
 
-def _parse_timeseries(raw_rows: list[dict]) -> list[dict]:
-    """Parse and sort a time_series array from a tech JSON."""
-    rows: list[dict] = []
-    for r in raw_rows:
+def _load_city_timeseries() -> dict[str, list[dict]]:
+    """Load all *_timeseries.json city files. Returns {city_id: [{year, power_kwh, water_kgal, co2_kg}, ...]}."""
+    cities: dict[str, list[dict]] = {}
+    if not CITIES_DIR.exists():
+        return cities
+
+    for path in sorted(CITIES_DIR.glob("*_timeseries.json")):
         try:
-            rows.append({
-                "year": int(r["year"]),
-                "power_kwh": float(r["power_kwh"]),
-                "water_kgal": float(r["water_kgal"]),
-                "co2_kg": float(r["co2_kg"]),
-                "data_type": str(r.get("data_type", "historical")).strip().lower(),
-                "scenario": str(r.get("scenario", "")).strip().lower(),
-                "confidence": float(r.get("confidence", 1.0) or 1.0),
-            })
-        except (KeyError, TypeError, ValueError):
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
             continue
-    rows.sort(key=lambda x: x["year"])
-    return rows
+
+        raw_ts = payload.get("time_series", [])
+        if not raw_ts:
+            continue
+
+        rows: list[dict] = []
+        for r in raw_ts:
+            try:
+                rows.append({
+                    "year": int(r["year"]),
+                    "power_kwh": float(r.get("power_kwh", 0)),
+                    "water_kgal": float(r.get("water_kgal", 0)),
+                    "co2_kg": float(r.get("co2_kg", 0)),
+                })
+            except (KeyError, TypeError, ValueError):
+                continue
+        rows.sort(key=lambda x: x["year"])
+
+        # Derive city id from filename: chicago_timeseries.json -> chicago
+        stem = path.stem.replace("_timeseries", "")
+        city_id = re.sub(r"[^a-z0-9]+", "-", stem.lower()).strip("-")
+        cities[city_id] = rows
+
+    return cities
+
+
+def _average_timeseries(all_city_ts: dict[str, list[dict]]) -> list[dict]:
+    """Compute per-year average across all cities."""
+    if not all_city_ts:
+        return []
+
+    year_sums: dict[int, dict] = {}
+    year_counts: dict[int, int] = {}
+
+    for rows in all_city_ts.values():
+        for r in rows:
+            y = r["year"]
+            if y not in year_sums:
+                year_sums[y] = {"power_kwh": 0.0, "water_kgal": 0.0, "co2_kg": 0.0}
+                year_counts[y] = 0
+            year_sums[y]["power_kwh"] += r["power_kwh"]
+            year_sums[y]["water_kgal"] += r["water_kgal"]
+            year_sums[y]["co2_kg"] += r["co2_kg"]
+            year_counts[y] += 1
+
+    averaged: list[dict] = []
+    for y in sorted(year_sums.keys()):
+        n = year_counts[y]
+        averaged.append({
+            "year": y,
+            "power_kwh": round(year_sums[y]["power_kwh"] / n, 2),
+            "water_kgal": round(year_sums[y]["water_kgal"] / n, 2),
+            "co2_kg": round(year_sums[y]["co2_kg"] / n, 2),
+        })
+    return averaged
+
+
+# ── Tech metadata loader ─────────────────────────────────────────────────
+
+def _load_tech_metadata() -> list[dict]:
+    """Load metadata + static resource values from each emergent tech JSON."""
+    techs: list[dict] = []
+    if not EMERGENT_TECH_DIR.exists():
+        return techs
+
+    for path in sorted(EMERGENT_TECH_DIR.glob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+
+        techs.append({
+            "stem": path.stem,
+            "name": _title_from_stem(path.stem),
+            "source": str(payload.get("source", TECH_CONFIG.get("defaults", {}).get("unknownSource", "Unknown source"))),
+            "learn": payload.get("learn") if isinstance(payload.get("learn"), dict) else {},
+            "power_usage": _safe_float(payload.get("power_usage"), 1.0),
+            "water_usage": _safe_float(payload.get("water_usage"), 1.0),
+            "co2_emissions": _safe_float(payload.get("co2_emissions"), 1.0),
+            "cost_of_implementation": _safe_float(payload.get("cost of implementation", payload.get("cost_of_implementation")), 0.0),
+            "annual_growth_pct": _safe_float(payload.get("annual_growth_pct"), 0.0),
+        })
+    return techs
+
+
+# ── Timeseries → tech allocation helpers ──────────────────────────────────
+
+def _allocate_timeseries(city_ts: list[dict], tech_meta: dict, all_tech_meta: list[dict]) -> list[dict]:
+    """
+    Produce a per-technology timeseries by scaling the city's aggregate
+    values by the tech's share of total resource weights.
+
+    For forecast years the tech's own annual_growth_pct is compounded on
+    top of the baseline city trend so each technology diverges over time.
+    """
+    total_power = sum(t["power_usage"] for t in all_tech_meta) or 1.0
+    total_water = sum(t["water_usage"] for t in all_tech_meta) or 1.0
+    total_co2 = sum(t["co2_emissions"] for t in all_tech_meta) or 1.0
+
+    power_fraction = tech_meta["power_usage"] / total_power
+    water_fraction = tech_meta["water_usage"] / total_water
+    co2_fraction = tech_meta["co2_emissions"] / total_co2
+
+    growth_rate = tech_meta.get("annual_growth_pct", 0.0) / 100.0  # e.g. 5.0 → 0.05
+
+    allocated: list[dict] = []
+    for row in city_ts:
+        year = row["year"]
+        is_forecast = year > HISTORICAL_CUTOFF
+        # For forecast years, compound the tech-specific growth
+        if is_forecast:
+            years_ahead = year - HISTORICAL_CUTOFF
+            multiplier = (1.0 + growth_rate) ** years_ahead
+        else:
+            multiplier = 1.0
+
+        allocated.append({
+            "year": year,
+            "power_kwh": round(row["power_kwh"] * power_fraction * multiplier, 2),
+            "water_kgal": round(row["water_kgal"] * water_fraction * multiplier, 2),
+            "co2_kg": round(row["co2_kg"] * co2_fraction * multiplier, 2),
+            "data_type": "historical" if not is_forecast else "forecast",
+        })
+    return allocated
 
 
 def _latest_historical_value(rows: list[dict], key: str) -> float:
-    """Return the most recent historical value for *key*, or 0."""
-    hist = [r for r in rows if r["data_type"] == "historical"]
+    hist = [r for r in rows if r.get("data_type") == "historical"]
     if not hist:
-        return 0.0
+        return rows[-1][key] if rows else 0.0
     return float(hist[-1][key])
 
 
 def _yoy_delta(rows: list[dict], key: str) -> float:
-    """Compute YoY % change between the last two historical points."""
-    hist = [r for r in rows if r["data_type"] == "historical"]
-    if len(hist) < 2:
+    """Percentage change from the current (last historical) year to 10 years ahead."""
+    hist = [r for r in rows if r.get("data_type") == "historical"]
+    if not hist:
         return 0.0
-    prev = float(hist[-2][key])
-    curr = float(hist[-1][key])
-    if prev == 0:
+    current_row = hist[-1]
+    current_val = float(current_row[key])
+    if current_val == 0:
         return 0.0
-    return round(((curr - prev) / prev) * 100.0, 1)
+
+    target_year = current_row["year"] + 10
+    # Find the forecast row closest to target_year
+    forecast = [r for r in rows if r.get("data_type") == "forecast"]
+    if not forecast:
+        return 0.0
+    future_row = min(forecast, key=lambda r: abs(r["year"] - target_year))
+    future_val = float(future_row[key])
+    return round(((future_val - current_val) / current_val) * 100.0, 1)
 
 
-def _sparkline_from_timeseries(rows: list[dict], key: str) -> list[float]:
-    """Extract the raw yearly values as sparkline data (all points)."""
+def _sparkline_from_rows(rows: list[dict], key: str) -> list[float]:
     return [round(float(r[key]), 2) for r in rows]
 
 
 def _build_trajectory(rows: list[dict], value_key: str) -> dict:
-    """Build historical + projected series for TrajectoryChart."""
-    historical_rows = [r for r in rows if r["data_type"] == "historical"]
-    forecast_rows = [r for r in rows if r["data_type"] == "forecast"]
+    historical_rows = [r for r in rows if r.get("data_type") == "historical"]
+    forecast_rows = [r for r in rows if r.get("data_type") == "forecast"]
 
     if not historical_rows:
         return {"historical": [], "projected": []}
@@ -199,49 +322,51 @@ def _build_trajectory(rows: list[dict], value_key: str) -> dict:
         for r in historical_rows
     ]
 
-    projected = []
-    for r in forecast_rows:
-        value = float(r[value_key])
-        confidence = _clamp(float(r.get("confidence", 1.0)), 0.0, 1.0)
-        margin = max(1.0, value * (1.0 - confidence))
-        projected.append({
-            "month": (r["year"] - reference_year) * 12,
-            "value": round(value, 2),
-            "upper": round(value + margin, 2),
-            "lower": round(max(0.0, value - margin), 2),
-        })
+    projected = [
+        {"month": (r["year"] - reference_year) * 12, "value": round(float(r[value_key]), 2)}
+        for r in forecast_rows
+    ]
 
     return {"historical": historical, "projected": projected}
 
 
-# ── Load emergent tech rows ──────────────────────────────────────────────
+# ── Regions ──────────────────────────────────────────────────────────────
 
-def _load_emergent_rows() -> list[dict]:
-    rows: list[dict] = []
-    if not EMERGENT_TECH_DIR.exists():
-        return rows
+def _load_regions() -> list[str]:
+    regions = {TECH_CONFIG.get("defaults", {}).get("globalRegion", "Global")}
+    for city_id in _ALL_CITY_TIMESERIES:
+        regions.add(city_id.replace("-", " ").title().replace("St ", "St. "))
+    return sorted(regions)
 
-    for path in sorted(EMERGENT_TECH_DIR.glob("*.json")):
-        try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
 
-        ts_raw = payload.get("time_series", [])
-        if not ts_raw:
-            continue  # skip techs without timeseries data
+# ── Build catalog ────────────────────────────────────────────────────────
 
-        ts = _parse_timeseries(ts_raw)
+def _build_catalog(timeseries: list[dict], tech_metadata: list[dict]):
+    """
+    Build the full catalog of categories & technologies from a given
+    timeseries (either a specific city's or the cross-city average).
+
+    Returns (categories, tech_index, trajectory_cache, engine_status, macro_summary).
+    """
+    defaults = TECH_CONFIG.get("defaults", {})
+    labels = TECH_CONFIG.get("labels", {})
+    thresholds = TECH_CONFIG.get("thresholds", {})
+
+    if not tech_metadata or not timeseries:
+        return [], {}, {}, {
+            "technologiesModeled": 0,
+            "regionsUnderStress": 0,
+            "lastModelUpdate": datetime.now(timezone.utc).isoformat(),
+        }, defaults.get("emptySummary", "No emergent technology data was found in the data folder.")
+
+    # Allocate city timeseries to each tech
+    tech_rows: list[dict] = []
+    for meta in tech_metadata:
+        ts = _allocate_timeseries(timeseries, meta, tech_metadata)
         if not ts:
             continue
-
-        rows.append({
-            "stem": path.stem,
-            "name": _title_from_stem(path.stem),
-            "source": str(payload.get("source", TECH_CONFIG.get("defaults", {}).get("unknownSource", "Unknown source"))),
-            "learn": payload.get("learn") if isinstance(payload.get("learn"), dict) else {},
-            "research_frequency": payload.get("research_frequency", {}),
-            "vc_frequency": payload.get("vc_frequency", {}),
+        tech_rows.append({
+            **meta,
             "timeseries": ts,
             "latest_power": _latest_historical_value(ts, "power_kwh"),
             "latest_water": _latest_historical_value(ts, "water_kgal"),
@@ -250,52 +375,20 @@ def _load_emergent_rows() -> list[dict]:
             "water_delta": _yoy_delta(ts, "water_kgal"),
             "co2_delta": _yoy_delta(ts, "co2_kg"),
         })
-    return rows
 
-
-# ── Regions ──────────────────────────────────────────────────────────────
-
-def _load_regions() -> list[str]:
-    regions = {TECH_CONFIG.get("defaults", {}).get("globalRegion", "Global")}
-    if not CITIES_DIR.exists():
-        return [TECH_CONFIG.get("defaults", {}).get("globalRegion", "Global")]
-    for path in CITIES_DIR.glob("*.json"):
-        if path.stem.endswith("_timeseries"):
-            continue
-        regions.add(_title_from_stem(path.stem))
-    return sorted(regions)
-
-
-# ── Build catalog ────────────────────────────────────────────────────────
-
-def _build_catalog():
-    emergent_rows = _load_emergent_rows()
-    defaults = TECH_CONFIG.get("defaults", {})
-    labels = TECH_CONFIG.get("labels", {})
-    thresholds = TECH_CONFIG.get("thresholds", {})
-
-    if not emergent_rows:
+    if not tech_rows:
         return [], {}, {}, {
             "technologiesModeled": 0,
             "regionsUnderStress": 0,
             "lastModelUpdate": datetime.now(timezone.utc).isoformat(),
-        }, defaults.get("emptySummary", "No emergent technology data was found in the data folder."), [defaults.get("globalRegion", "Global")]
-
-    # Normalise to 0–100 relative to the max across all technologies
-    max_power = max((r["latest_power"] for r in emergent_rows), default=1.0) or 1.0
-    max_water = max((r["latest_water"] for r in emergent_rows), default=1.0) or 1.0
-    max_co2 = max((r["latest_co2"] for r in emergent_rows), default=1.0) or 1.0
+        }, defaults.get("emptySummary", "No emergent technology data was found in the data folder.")
 
     categories_index: dict[str, dict] = {}
     trajectory_cache: dict[str, dict] = {}
     flat: list[dict] = []
 
-    for row in emergent_rows:
+    for row in tech_rows:
         category_id, category_name, category_desc = _category_for_stem(row["stem"])
-
-        power_index = round(_clamp((row["latest_power"] / max_power) * 100.0, 0, 100), 1)
-        water_index = round(_clamp((row["latest_water"] / max_water) * 100.0, 0, 100), 1)
-        pollution_index = round(_clamp((row["latest_co2"] / max_co2) * 100.0, 0, 100), 1)
 
         ts = row["timeseries"]
 
@@ -305,46 +398,22 @@ def _build_catalog():
             "description": f"Source dataset: {row['source']}",
             "source": row["source"],
             "power": {
-                "forecastIndex": power_index,
+                "forecastIndex": round(row["latest_power"], 1),
+                "unit": "kWh",
                 "delta": row["power_delta"],
-                "mwDemand": f"{row['latest_power']:.1f} kWh",
-                "gridCarbonIndex": round(_clamp(pollution_index, 0, 100), 1),
-                "loadConcentrationRisk": (
-                    labels.get("loadConcentration", {}).get("high", "High")
-                    if power_index >= thresholds.get("loadConcentration", {}).get("high", 70)
-                    else labels.get("loadConcentration", {}).get("moderate", "Moderate")
-                    if power_index >= thresholds.get("loadConcentration", {}).get("moderate", 40)
-                    else labels.get("loadConcentration", {}).get("low", "Low")
-                ),
-                "sparkline": _sparkline_from_timeseries(ts, "power_kwh"),
+                "sparkline": _sparkline_from_rows(ts, "power_kwh"),
             },
             "pollution": {
-                "forecastIndex": pollution_index,
+                "forecastIndex": round(row["latest_co2"], 1),
+                "unit": "kg CO₂",
                 "delta": row["co2_delta"],
-                "emissionDelta": f"{labels.get('pollutionPrefix', 'CO₂')} {row['latest_co2']:.2f} kg",
-                "toxicityTier": (
-                    labels.get("toxicityTier", {}).get("tier1", "Tier 1")
-                    if pollution_index >= thresholds.get("toxicityTier", {}).get("tier1", 75)
-                    else labels.get("toxicityTier", {}).get("tier2", "Tier 2")
-                    if pollution_index >= thresholds.get("toxicityTier", {}).get("tier2", 50)
-                    else labels.get("toxicityTier", {}).get("tier3", "Tier 3")
-                ),
-                "wasteBurden": (
-                    labels.get("wasteBurden", {}).get("high", "High")
-                    if pollution_index >= thresholds.get("wasteBurden", {}).get("high", 70)
-                    else labels.get("wasteBurden", {}).get("moderate", "Moderate")
-                    if pollution_index >= thresholds.get("wasteBurden", {}).get("moderate", 40)
-                    else labels.get("wasteBurden", {}).get("low", "Low")
-                ),
-                "sparkline": _sparkline_from_timeseries(ts, "co2_kg"),
+                "sparkline": _sparkline_from_rows(ts, "co2_kg"),
             },
             "water": {
-                "forecastIndex": water_index,
+                "forecastIndex": round(row["latest_water"], 1),
+                "unit": "kgal",
                 "delta": row["water_delta"],
-                "cubicMetersYear": f"{row['latest_water']:.2f} kgal",
-                "scarcityExposure": round(_clamp(water_index, 0, 100), 1),
-                "contaminationProb": round(_clamp(pollution_index / 100.0, 0.0, 1.0), 2),
-                "sparkline": _sparkline_from_timeseries(ts, "water_kgal"),
+                "sparkline": _sparkline_from_rows(ts, "water_kgal"),
             },
             "region": defaults.get("globalRegion", "Global"),
             "category": category_name,
@@ -356,7 +425,6 @@ def _build_catalog():
             },
         }
 
-        # Per-tech trajectory from its own timeseries
         trajectory_cache[tech["id"]] = {
             "power": _build_trajectory(ts, "power_kwh"),
             "pollution": _build_trajectory(ts, "co2_kg"),
@@ -393,23 +461,75 @@ def _build_catalog():
     )
     macro_summary = macro_template.format(top_names=top_names or "N/A")
 
-    return categories, {item["id"]: item for item in flat_sorted}, trajectory_cache, engine_status, macro_summary, _load_regions()
+    return categories, {item["id"]: item for item in flat_sorted}, trajectory_cache, engine_status, macro_summary
 
 
-_CATEGORIES, _TECH_INDEX, TRAJECTORY_CACHE, ENGINE_STATUS, MACRO_SUMMARY, REGIONS = _build_catalog()
-CATEGORIES = _CATEGORIES
+# ── Module-level data ─────────────────────────────────────────────────────
+
+_ALL_CITY_TIMESERIES = _load_city_timeseries()
+_AVG_TIMESERIES = _average_timeseries(_ALL_CITY_TIMESERIES)
+_TECH_METADATA = _load_tech_metadata()
+
+# Pre-build catalogs: "average" for Explorer + one per city for Forecasts
+_CATALOGS: dict[str, tuple] = {}
+
+_avg_result = _build_catalog(_AVG_TIMESERIES, _TECH_METADATA)
+_CATALOGS["__average__"] = _avg_result
+
+for _cid, _cts in _ALL_CITY_TIMESERIES.items():
+    _CATALOGS[_cid] = _build_catalog(_cts, _TECH_METADATA)
+
+# Default (average) exports for backward compatibility
+CATEGORIES = _avg_result[0]
+ENGINE_STATUS = _avg_result[3]
+MACRO_SUMMARY = _avg_result[4]
+REGIONS = _load_regions()
 
 
-def get_all_technologies_flat():
-    """Return a flat list of all technologies with category metadata."""
+# ── Public API ────────────────────────────────────────────────────────────
+
+def _get_catalog(city: str | None = None) -> tuple:
+    """Return the catalog tuple for a city, or the cross-city average."""
+    if not city:
+        return _CATALOGS["__average__"]
+    if city in _CATALOGS:
+        return _CATALOGS[city]
+    normalised = re.sub(r"[^a-z0-9]+", "-", city.lower()).strip("-")
+    return _CATALOGS.get(normalised, _CATALOGS["__average__"])
+
+
+def get_categories(city: str | None = None) -> list[dict]:
+    """Return category list, optionally scoped to a city."""
+    catalog = _get_catalog(city)
+    return catalog[0]
+
+
+def get_all_technologies_flat(city: str | None = None) -> list[dict]:
+    """Return a flat list of all technologies, optionally scoped to a city."""
+    catalog = _get_catalog(city)
+    tech_index = catalog[1]
     return [
-        {
-            **tech,
-            "category": tech["category"],
-            "categoryId": tech["categoryId"],
-        }
-        for tech in _TECH_INDEX.values()
+        {**tech, "category": tech["category"], "categoryId": tech["categoryId"]}
+        for tech in tech_index.values()
     ]
+
+
+def get_technology_by_id(tech_id: str, city: str | None = None):
+    """Find a technology by ID and attach trajectory + metadata details."""
+    catalog = _get_catalog(city)
+    tech_index = catalog[1]
+    trajectory_cache = catalog[2]
+
+    tech = tech_index.get(tech_id)
+    if not tech:
+        return None
+
+    return {
+        **tech,
+        "trajectory": trajectory_cache.get(tech_id, {"power": {}, "pollution": {}, "water": {}}),
+        "drivers": _build_drivers(tech),
+        "regionSensitivity": [],
+    }
 
 
 def _build_drivers(tech: dict) -> list[dict]:
@@ -420,17 +540,3 @@ def _build_drivers(tech: dict) -> list[dict]:
         {"label": driver_labels.get("waterGrowth", "Water Growth"), "value": f"{tech['water']['delta']:+.1f}%"},
         {"label": driver_labels.get("pollutionGrowth", "Pollution Growth"), "value": f"{tech['pollution']['delta']:+.1f}%"},
     ]
-
-
-def get_technology_by_id(tech_id: str):
-    """Find a technology by ID and attach trajectory + metadata details."""
-    tech = _TECH_INDEX.get(tech_id)
-    if not tech:
-        return None
-
-    return {
-        **tech,
-        "trajectory": TRAJECTORY_CACHE.get(tech_id, {"power": {}, "pollution": {}, "water": {}}),
-        "drivers": _build_drivers(tech),
-        "regionSensitivity": [],
-    }

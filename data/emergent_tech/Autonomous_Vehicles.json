@@ -5,8 +5,9 @@
         "significance": "They are a major shift in transportation operations with implications for logistics, public safety, and accessibility.",
         "valueAdd": "Autonomous fleets can improve road safety outcomes, increase mobility access, and enhance freight efficiency across urban and regional networks."
     },
-    "power_usage": 120,
-    "water_usage": 2.5,
-    "co2_emissions": 45,
-    "cost of implementation": 12.00
+    "power_usage": 80,
+    "water_usage": 0.5,
+    "co2_emissions": 35,
+    "annual_growth_pct": 8.0,
+    "cost of implementation": 8.00
 }

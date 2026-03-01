@@ -1,17 +1,8 @@
 {
     "source": "Los Angeles, California, United States",
-    "power": {
-        "power_consumption": 44440000000,
-        "avg_growth_rate": 2.5
-    },
-    "water": {
-        "water_consumption": 146000000000,
-        "avg_growth_rate": 1.8
-    },
-    "air_pollution": {
-        "pm25_concentration": 7.0,
-        "avg_growth_rate": -0.5
-    },
+    "city": "Los Angeles",
+    "population": 3881041,
+    "intersections": 4850,
     "time_series": [
         {
             "year": 2017,

@@ -438,13 +438,26 @@ select:focus {
 /* ── Index Score ── */
 .index-score {
   font-family: var(--font-mono);
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 600;
   line-height: 1;
 }
 
 .index-score-sm {
-  font-size: 1.125rem;
+  font-size: 0.9375rem;
+}
+
+.pillar-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.pillar-unit {
+  color: var(--text-tertiary);
+  font-size: 0.6rem;
+  white-space: nowrap;
 }
 
 /* ── Delta Arrow ── */
@@ -452,8 +465,9 @@ select:focus {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .delta-up {
@@ -640,9 +654,9 @@ select:focus {
 /* ── Tech Card ── */
 .tech-card {
   display: grid;
-  grid-template-columns: 240px 1fr auto;
+  grid-template-columns: 200px 1fr auto;
   align-items: center;
-  gap: var(--sp-6);
+  gap: var(--sp-4);
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
@@ -695,10 +709,12 @@ select:focus {
 
 .tech-pillar-cell {
   background: var(--bg-card);
-  padding: var(--sp-3) var(--sp-4);
+  padding: var(--sp-2) var(--sp-3);
   display: flex;
   flex-direction: column;
-  gap: var(--sp-1);
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .tech-card-actions {
@@ -1168,7 +1184,6 @@ input[type='range']::-webkit-slider-thumb:hover {
 .page-subtitle {
   font-size: 0.875rem;
   color: var(--text-tertiary);
-  max-width: 640px;
   line-height: 1.6;
 }
 

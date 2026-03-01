@@ -1,17 +1,8 @@
 {
     "source": "St. Louis, Missouri, United States",
-    "power": {
-        "power_consumption": 28000000000,
-        "avg_growth_rate": 1.8
-    },
-    "water": {
-        "water_consumption": 54000000000,
-        "avg_growth_rate": 1.0
-    },
-    "air_pollution": {
-        "pm25_concentration": 9.0,
-        "avg_growth_rate": 0.2
-    },
+    "city": "St. Louis",
+    "population": 298018,
+    "intersections": 400,
     "time_series": [
         {
             "year": 2017,

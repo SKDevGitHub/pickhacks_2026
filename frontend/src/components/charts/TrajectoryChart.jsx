@@ -2,7 +2,6 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Line,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -32,8 +31,6 @@ export default function TrajectoryChart({
       month: d.month,
       observed: d.value,
       forecast: null,
-      upper: null,
-      lower: null,
     })),
     // Bridge point — last historical links to first projected
     ...(historical.length && projected.length
@@ -42,8 +39,6 @@ export default function TrajectoryChart({
             month: 0,
             observed: historical[historical.length - 1].value,
             forecast: projected[0].value,
-            upper: projected[0].upper,
-            lower: projected[0].lower,
           },
         ]
       : []),
@@ -51,12 +46,8 @@ export default function TrajectoryChart({
       month: d.month,
       observed: null,
       forecast: d.value,
-      upper: d.upper,
-      lower: d.lower,
     })),
   ];
-
-  const fillColor = color + '18'; // 10% opacity hex
 
   return (
     <div style={{ width: '100%', height: 220 }}>
@@ -90,24 +81,6 @@ export default function TrajectoryChart({
             labelFormatter={(v) =>
               v === 0 ? 'Present' : `${v > 0 ? '+' : ''}${v} months`
             }
-          />
-
-          {/* Confidence band */}
-          <Area
-            type="monotone"
-            dataKey="upper"
-            stroke="none"
-            fill={fillColor}
-            fillOpacity={1}
-            isAnimationActive={false}
-          />
-          <Area
-            type="monotone"
-            dataKey="lower"
-            stroke="none"
-            fill="var(--bg-card)"
-            fillOpacity={1}
-            isAnimationActive={false}
           />
 
           {/* Now reference line */}
