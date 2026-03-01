@@ -1,16 +1,18 @@
 {
     "source": "NYC Local Law 84 - Building Energy & Water Disclosure",
-    "power_usage": {
-        "total_electricity_kwh": 98810606488.1,
-        "avg_growth": 2.5
-    },
-    "water_usage": {
-        "total_water_kgal": 343274346.8,
-        "avg_growth": 2.7
-    },
-    "pollution": {
-        "total_ghg_mt_co2e": 86209590.45,
-        "avg_growth": 2.8
-    },
-    "intersections": 12500
+    "time_series": [
+        { "year": 2017, "power_kwh": 100, "water_kgal": 1.0, "co2_kg": 40 },
+        { "year": 2018, "power_kwh": 95, "water_kgal": 0.95, "co2_kg": 38 },
+        { "year": 2019, "power_kwh": 90, "water_kgal": 0.90, "co2_kg": 35 },
+        { "year": 2020, "power_kwh": 85, "water_kgal": 0.88, "co2_kg": 33 },
+        { "year": 2023, "power_kwh": 82, "water_kgal": 0.85, "co2_kg": 32 },
+        { "year": 2024, "power_kwh": 78, "water_kgal": 0.80, "co2_kg": 30 },
+        { "year": 2025, "power_kwh": 75, "water_kgal": 0.78, "co2_kg": 28 },
+        { "year": 2026, "power_kwh": 70, "water_kgal": 0.75, "co2_kg": 25 },
+        { "year": 2020, "power_kwh": 85, "water_kgal": 0.88, "co2_kg": 33 },
+        { "year": 2023, "power_kwh": 82, "water_kgal": 0.85, "co2_kg": 32 },
+        { "year": 2024, "power_kwh": 78, "water_kgal": 0.80, "co2_kg": 30 },
+        { "year": 2025, "power_kwh": 75, "water_kgal": 0.78, "co2_kg": 28 },
+        { "year": 2026, "power_kwh": 70, "water_kgal": 0.75, "co2_kg": 25 }
+    ]
 }

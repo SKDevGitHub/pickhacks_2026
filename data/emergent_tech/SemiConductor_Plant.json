@@ -5,24 +5,8 @@
         "significance": "Chip supply is now strategic infrastructure for economic resilience, defense capability, and global technology leadership.",
         "valueAdd": "Local fabrication capacity can strengthen supply-chain security, create advanced manufacturing jobs, and support regional innovation ecosystems."
     },
-    "research_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 0, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 0, "2018": 0, "2019": 0, "2020": 0, "2021": 0,
-        "2022": 0, "2023": 0, "2024": 0, "2025": 0
-    },
-    "vc_frequency": {
-        "2010": 1, "2011": 1, "2012": 0, "2013": 1, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 1, "2018": 0, "2019": 0, "2020": 0, "2021": 0,
-        "2022": 0, "2023": 1, "2024": 0, "2025": 0
-    },
-    "time_series": [
-        { "year": 2023, "power_kwh": 95, "water_kgal": 2.5, "co2_kg": 45, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2024, "power_kwh": 125, "water_kgal": 3.3, "co2_kg": 58, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2025, "power_kwh": 180, "water_kgal": 4.8, "co2_kg": 82, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2026, "power_kwh": 260, "water_kgal": 7.0, "co2_kg": 115, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2027, "power_kwh": 370, "water_kgal": 10.2, "co2_kg": 160, "data_type": "forecast", "scenario": "baseline", "confidence": 0.92 },
-        { "year": 2028, "power_kwh": 520, "water_kgal": 14.5, "co2_kg": 220, "data_type": "forecast", "scenario": "baseline", "confidence": 0.88 },
-        { "year": 2029, "power_kwh": 720, "water_kgal": 20.0, "co2_kg": 300, "data_type": "forecast", "scenario": "baseline", "confidence": 0.84 },
-        { "year": 2030, "power_kwh": 980, "water_kgal": 27.5, "co2_kg": 400, "data_type": "forecast", "scenario": "baseline", "confidence": 0.80 }
-    ]
+    "power_usage": 120,
+    "water_usage": 2.5,
+    "co2_emissions": 45,
+    "cost of implementation": 12.00
 }

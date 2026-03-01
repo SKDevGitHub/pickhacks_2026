@@ -5,24 +5,8 @@
         "significance": "They are becoming core infrastructure for national competitiveness, scientific research, and next-generation digital services.",
         "valueAdd": "AI campuses can accelerate innovation, create high-skilled jobs, and improve public and private sector decision-making through stronger AI capability."
     },
-    "research_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 5, "2014": 3, "2015": 9,
-        "2016": 13, "2017": 16, "2018": 19, "2019": 24, "2020": 22, "2021": 23,
-        "2022": 11, "2023": 13, "2024": 3, "2025": 0
-    },
-    "vc_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 0, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 0, "2018": 3, "2019": 5, "2020": 3, "2021": 6,
-        "2022": 11, "2023": 5, "2024": 11, "2025": 6
-    },
-    "time_series": [
-        { "year": 2023, "power_kwh": 82, "water_kgal": 0.85, "co2_kg": 32, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2024, "power_kwh": 105, "water_kgal": 1.1, "co2_kg": 41, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2025, "power_kwh": 168, "water_kgal": 2.1, "co2_kg": 68, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2026, "power_kwh": 240, "water_kgal": 3.25, "co2_kg": 95, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2027, "power_kwh": 385, "water_kgal": 5.8, "co2_kg": 142, "data_type": "forecast", "scenario": "baseline", "confidence": 0.92 },
-        { "year": 2028, "power_kwh": 510, "water_kgal": 8.1, "co2_kg": 195, "data_type": "forecast", "scenario": "baseline", "confidence": 0.90 },
-        { "year": 2029, "power_kwh": 680, "water_kgal": 11.2, "co2_kg": 260, "data_type": "forecast", "scenario": "baseline", "confidence": 0.88 },
-        { "year": 2030, "power_kwh": 945, "water_kgal": 15.6, "co2_kg": 350, "data_type": "forecast", "scenario": "baseline", "confidence": 0.86 }
-    ]
+    "power_usage": 120,
+    "water_usage": 2.5,
+    "co2_emissions": 45,
+    "cost of implementation": 12.00
 }
