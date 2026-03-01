@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════
-   Tech Signals — Design System
+   Chartr AI — Design System
    Apple-inspired dark minimal / 8pt grid / SF Pro–style
    ═══════════════════════════════════════════════ */
 
@@ -701,28 +701,13 @@ select:focus {
   gap: var(--sp-1);
 }
 
-.tech-card-risk {
+.tech-card-actions {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   padding: var(--sp-3);
   min-width: 72px;
-}
-
-.risk-score {
-  font-family: var(--font-mono);
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.risk-label {
-  font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  text-align: center;
 }
 
 /* ── Alert Cards (Home page) ── */
@@ -2206,12 +2191,6 @@ input[type='range']::-webkit-slider-thumb:hover {
 .learn-tech-top h3 {
   font-size: 1rem;
   color: var(--text-primary);
-}
-
-.learn-risk {
-  font-size: 0.75rem;
-  color: var(--accent-amber-text);
-  font-family: var(--font-mono);
 }
 
 .learn-tech-meta {

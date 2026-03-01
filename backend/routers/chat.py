@@ -42,7 +42,7 @@ def _build_tech_context_blob() -> str:
     return "\n".join(lines)
 
 
-_CHAT_SYSTEM_PROMPT = """You are **Tech Signals AI**, a helpful environmental-technology advisor.
+_CHAT_SYSTEM_PROMPT = """You are **Chartr AI**, a helpful environmental-technology advisor.
 
 Your knowledge base contains detailed data on emerging technologies and their environmental
 externalities across three dimensions: **Power**, **Pollution**, and **Water**.
@@ -87,7 +87,7 @@ async def api_chat(
 
     contents: list[dict] = []
     contents.append({"role": "user", "parts": [{"text": system_prompt}]})
-    contents.append({"role": "model", "parts": [{"text": "Understood. I have the full Tech Signals dataset loaded and I'm ready to help with environmental technology analysis. What would you like to know?"}]})
+    contents.append({"role": "model", "parts": [{"text": "Understood. I have the full Chartr AI dataset loaded and I'm ready to help with environmental technology analysis. What would you like to know?"}]})
 
     for msg in messages:
         role = "model" if msg.role == "assistant" else "user"

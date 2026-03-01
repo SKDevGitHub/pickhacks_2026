@@ -2,12 +2,10 @@
   "defaults": {
     "unknownSource": "Unknown source",
     "globalRegion": "Global",
-    "defaultForecastHorizon": "24m",
     "emptySummary": "No emergent technology data was found in the data folder.",
     "macroSummaryTemplate": "Technology forecasts are now sourced from data/emergent_tech. Highest current externality pressure appears in: {top_names}."
   },
   "thresholds": {
-    "highRiskAlert": 70,
     "loadConcentration": {
       "high": 70,
       "moderate": 40
@@ -44,8 +42,7 @@
       "source": "Source",
       "powerGrowth": "Power Growth",
       "waterGrowth": "Water Growth",
-      "pollutionGrowth": "Pollution Growth",
-      "riskScore": "Risk Score"
+      "pollutionGrowth": "Pollution Growth"
     }
   },
   "categories": {

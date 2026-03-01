@@ -1,6 +1,6 @@
 """
 Auth0 JWT verification for FastAPI.
-Validates access tokens issued by Auth0 for the Tech Signals API.
+Validates access tokens issued by Auth0 for the Chartr AI API.
 """
 
 import logging

@@ -158,7 +158,7 @@ export default function Forecasts() {
                   <PillarPanel type="pollution" data={tech.pollution} compact />
                   <PillarPanel type="water" data={tech.water} compact />
                 </div>
-                <div className="tech-card-risk">
+                <div className="tech-card-actions">
                   <button
                     className={isFavorite(tech.id) ? 'btn-secondary btn-untrack' : 'btn-primary'}
                     style={{ height: 28, padding: '0 10px', fontSize: '0.7rem', marginBottom: 6 }}
@@ -169,18 +169,6 @@ export default function Forecasts() {
                   >
                     {isFavorite(tech.id) ? 'Untrack' : 'Track'}
                   </button>
-                  <span
-                    className="risk-score"
-                    style={{
-                      color:
-                        tech.externalityRisk > 70
-                          ? 'var(--accent-amber-text)'
-                          : 'var(--text-secondary)',
-                    }}
-                  >
-                    {tech.externalityRisk}
-                  </span>
-                  <span className="risk-label">Externality Risk</span>
                 </div>
               </div>
             ))}
@@ -191,7 +179,7 @@ export default function Forecasts() {
       <p className="microcopy">
         All projections are derived from aggregated lifecycle assessment data,
         regional grid carbon intensity datasets, and deployment scaling
-        assumptions. Default forecast horizon: 12–36 months.
+        assumptions.
       </p>
     </div>
   );

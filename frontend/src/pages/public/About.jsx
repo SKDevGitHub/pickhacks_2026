@@ -16,7 +16,7 @@ const PILLARS = [
     key: 'power',
     title: 'Power',
     stat: 'Grid Load',
-    desc: 'Demand growth, grid dependence, and concentrated load risk from emerging technologies.',
+    desc: 'Demand growth, grid dependence, and concentrated load from emerging technologies.',
     img: IMG.power,
     color: 'var(--power-color)',
     bg: 'var(--power-bg)',
@@ -43,7 +43,7 @@ const PILLARS = [
 
 const FEATURES = [
   { icon: '◈', title: 'Forecast Engine', desc: '12–36 month outlooks for high-growth technologies where demand shifts quickly.' },
-  { icon: '⊞', title: 'Explorer', desc: 'Browse all tracked technologies, compare risk scores, and surface emerging patterns.' },
+  { icon: '⊎', title: 'Explorer', desc: 'Browse all tracked technologies, compare impacts, and surface emerging patterns.' },
   { icon: '◇', title: 'Scenario Builder', desc: 'Run scale scenarios to model deployment plans before capital commitment.' },
   { icon: '◍', title: 'Learn Hub', desc: 'Deep-dive primers on each technology—significance, tradeoffs, and community action.' },
   { icon: '⊟', title: 'News & Research', desc: 'AI-curated articles on environmental externalities and technology developments.' },
@@ -76,7 +76,7 @@ export default function About() {
             <span className="landing-hero-accent">before you scale.</span>
           </h1>
           <p className="landing-hero-subtitle">
-            Tech Signals models Power, Pollution, and Water externalities for emerging
+            Chartr AI models Power, Pollution, and Water externalities for emerging
             technologies—giving product, policy, and investment teams the foresight to act earlier.
           </p>
           <div className="landing-hero-actions">
@@ -104,11 +104,6 @@ export default function About() {
           </div>
           <div className="landing-stat-divider" />
           <div className="landing-stat">
-            <span className="landing-stat-number">12–36</span>
-            <span className="landing-stat-label">Month Forecast Horizon</span>
-          </div>
-          <div className="landing-stat-divider" />
-          <div className="landing-stat">
             <span className="landing-stat-number">∞</span>
             <span className="landing-stat-label">Scenario Simulations</span>
           </div>
@@ -122,7 +117,7 @@ export default function About() {
           <h2 className="landing-section-title">Three lenses. One decision.</h2>
           <p className="landing-section-subtitle">
             Every technology is evaluated across three environmental externality dimensions
-            to provide a complete risk picture.
+            to provide a complete environmental picture.
           </p>
         </div>
         <div className="landing-pillars">
@@ -188,7 +183,7 @@ export default function About() {
             </h2>
             <p className="landing-showcase-desc">
               Whether you're evaluating data center expansion, autonomous vehicle fleets, or
-              semiconductor fabrication plants, Tech Signals surfaces the environmental tradeoffs
+              semiconductor fabrication plants, Chartr AI surfaces the environmental tradeoffs
               that matter most.
             </p>
             {!isAuthenticated && (

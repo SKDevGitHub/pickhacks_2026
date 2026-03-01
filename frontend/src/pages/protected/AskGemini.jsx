@@ -2,13 +2,13 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import DOMPurify from 'dompurify';
 
-const WELCOME = `Hi! I'm **Tech Signals AI** — your environmental technology advisor.
+const WELCOME = `Hi! I'm **Chartr AI** — your environmental technology advisor.
 
 I have real-time access to all the emerging technology data in our system, including Power, Pollution, and Water externality forecasts.
 
 **Try asking me things like:**
 - "Compare the water usage of Data Centers vs Semiconductor Plants"
-- "Which technology has the highest pollution risk?"
+- "Which technology has the highest pollution impact?"
 - "What are the power implications of scaling autonomous vehicles?"
 - "Summarize the environmental tradeoffs of AI Campus deployments"
 
@@ -152,7 +152,7 @@ export default function AskGemini() {
         <div>
           <h1 className="chat-header-title">Ask Gemini</h1>
           <p className="chat-header-subtitle">
-            AI-powered environmental technology advisor · Backed by Tech Signals data
+            AI-powered environmental technology advisor · Backed by Chartr AI data
           </p>
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function AskGemini() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask about technologies, environmental impact, risk comparisons…"
+          placeholder="Ask about technologies, environmental impact, comparisons…"
           rows={1}
           disabled={loading}
         />

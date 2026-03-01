@@ -4,14 +4,6 @@ import { api } from '../../api';
 
 const CONCEPTS = [
   {
-    title: 'Externality Risk',
-    body: 'Composite score (0–100) showing likely environmental pressure from projected deployment.',
-  },
-  {
-    title: 'Forecast Horizon',
-    body: 'Expected planning window for change detection. Most views focus on 12–36 months.',
-  },
-  {
     title: 'Confidence Bands',
     body: 'Shaded uncertainty ranges around projected values to avoid false precision.',
   },
@@ -74,7 +66,7 @@ export default function Learn() {
 
   useEffect(() => {
     api
-      .technologies({ sortBy: 'risk' })
+      .technologies({ sortBy: 'power' })
       .then(setTechnologies)
       .catch(() => setTechnologies([]))
       .finally(() => setLoading(false));
@@ -170,7 +162,7 @@ export default function Learn() {
       </div>
 
       <section className="learn-section">
-        <h2 className="section-title">How to Read Tech Signals</h2>
+        <h2 className="section-title">How to Read Chartr AI</h2>
         <div className="learn-concepts-grid">
           {CONCEPTS.map((item) => (
             <article key={item.title} className="learn-concept-card">
@@ -194,9 +186,8 @@ export default function Learn() {
               <article key={tech.id} className="learn-tech-card">
                 <div className="learn-tech-top">
                   <h3>{tech.name}</h3>
-                  <span className="learn-risk">Risk {tech.externalityRisk}</span>
                 </div>
-                <p className="learn-tech-meta">{tech.category} · {tech.forecastHorizon}</p>
+                <p className="learn-tech-meta">{tech.category}</p>
                 <p className="learn-tech-desc">{tech.learn?.description || tech.description}</p>
 
                 <div className="learn-detail-block">

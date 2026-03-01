@@ -47,7 +47,7 @@ export default function Layout({ children }) {
         <div className="nav-inner">
           <NavLink to="/" className="nav-brand">
             <span className="nav-brand-dot" />
-            Tech Signals
+            Chartr AI
           </NavLink>
 
           <div className="nav-links">

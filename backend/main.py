@@ -1,5 +1,5 @@
 """
-Tech Signals — FastAPI Backend
+Chartr AI — FastAPI Backend
 Predictive Environmental Externality Engine
 """
 
@@ -30,7 +30,7 @@ if not logger.handlers:
 is_production = os.getenv('APP_ENV', 'development').lower() == 'production'
 
 app = FastAPI(
-    title="Tech Signals API",
+    title="Chartr AI API",
     description="Predictive Environmental Externality Engine — forecasts the environmental consequences of emerging technology adoption.",
     version="1.0.0",
     docs_url=None if is_production else "/docs",

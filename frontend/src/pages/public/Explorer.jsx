@@ -4,18 +4,17 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { api } from '../../api';
 import PillarPanel from '../../components/charts/PillarPanel';
 import { useRadarFavorites } from '../../hooks/useRadarFavorites';
-
-const HORIZON_OPTIONS = ['', '12m', '24m', '36m'];
+import { isEduEmail } from '../../auth/authz';
 
 export default function Explorer() {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth0();
+  const { isAuthenticated, user } = useAuth0();
+  const eduAllowed = isAuthenticated && isEduEmail(user);
   const [technologies, setTechnologies] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
-  const [horizon, setHorizon] = useState('');
-  const [sortBy, setSortBy] = useState('risk');
+  const [sortBy, setSortBy] = useState('power');
   const { isFavorite, toggleFavorite } = useRadarFavorites();
 
   useEffect(() => {
@@ -28,15 +27,12 @@ export default function Explorer() {
     const params = {};
     if (search) params.search = search;
     if (category) params.category = category;
-    if (horizon) params.horizon = horizon;
     if (sortBy) params.sortBy = sortBy;
     api.technologies(params).then(setTechnologies).catch(() => {});
-  }, [search, category, horizon, sortBy]);
+  }, [search, category, sortBy]);
 
   const openForecastDetail = (techId) => {
-    if (!isAuthenticated) {
-      return;
-    }
+    if (!eduAllowed) return;
     navigate(`/forecasts/${techId}`);
   };
 
@@ -46,8 +42,8 @@ export default function Explorer() {
         <h1 className="page-title">Explorer</h1>
         <p className="page-subtitle">
           Searchable, filterable directory of all modeled technologies.
-          Filter by Power Intensity, Emission Risk Tier, Water Stress Exposure,
-          Category, and Forecast Horizon.
+          Filter by Power Intensity, Emission Tier, Water Stress Exposure,
+          and Category.
         </p>
       </div>
 
@@ -71,20 +67,10 @@ export default function Explorer() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-          <span className="filter-label">Horizon</span>
-          <select value={horizon} onChange={(e) => setHorizon(e.target.value)}>
-            {HORIZON_OPTIONS.map((h) => (
-              <option key={h} value={h}>{h || 'All'}</option>
-            ))}
-          </select>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
           <span className="filter-label">Sort</span>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-            <option value="risk">Risk Score</option>
             <option value="power">Power Intensity</option>
-            <option value="pollution">Emission Risk</option>
+            <option value="pollution">Emission Impact</option>
             <option value="water">Water Stress</option>
           </select>
         </div>
@@ -95,17 +81,18 @@ export default function Explorer() {
         {technologies.map((tech) => (
           <div
             key={tech.id}
-            className="alert-card"
+            className={`alert-card${eduAllowed ? '' : ' alert-card-disabled'}`}
+            style={eduAllowed ? { cursor: 'pointer' } : { cursor: 'default', opacity: 0.85 }}
             onClick={() => openForecastDetail(tech.id)}
           >
             <div className="alert-card-header">
               <div>
                 <div className="alert-card-name">{tech.name}</div>
                 <div className="alert-card-meta">
-                  {tech.category} · {tech.forecastHorizon} · {tech.region}
+                  {tech.category} · {tech.region}
                 </div>
               </div>
-              <div className="tech-card-risk">
+              <div className="tech-card-actions">
                 {isAuthenticated && (
                   <button
                     className={isFavorite(tech.id) ? 'btn-auth btn-logout' : 'btn-auth btn-login'}
@@ -118,18 +105,7 @@ export default function Explorer() {
                     {isFavorite(tech.id) ? 'Untrack' : 'Track'}
                   </button>
                 )}
-                <span
-                  className="risk-score"
-                  style={{
-                    color:
-                      tech.externalityRisk > 70
-                        ? 'var(--accent-amber-text)'
-                        : 'var(--text-secondary)',
-                  }}
-                >
-                  {tech.externalityRisk}
-                </span>
-                <span className="risk-label">Risk</span>
+
               </div>
             </div>
 

@@ -411,7 +411,7 @@ def _build_prompt(tech: dict, sources: list[dict]) -> str:
         for idx, s in enumerate(sources)
     )
 
-    return f"""You are a senior cleantech editor writing for Tech Signals.
+    return f"""You are a senior cleantech editor writing for Chartr AI.
 
 TASK
 Write one high-quality article about this technology using concrete numbers from the provided data.
@@ -465,7 +465,7 @@ def _build_general_prompt(techs: list[dict], sources: list[dict]) -> str:
         for idx, s in enumerate(sources)
     )
 
-    return f"""You are a senior cleantech editor writing for Tech Signals.
+    return f"""You are a senior cleantech editor writing for Chartr AI.
 
 TASK
 Write a comparative roundup across ALL technologies below.

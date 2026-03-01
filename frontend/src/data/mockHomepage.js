@@ -20,12 +20,12 @@ export const MOMENTUM_SUPPLEMENTS = {
 };
 
 export const TRENDING_SIGNALS = [
-  { name: 'LLM Training Clusters', delta: +6.2, riskLevel: 'high',   id: 'llm-training-clusters' },
-  { name: 'Green H₂ Electrolysis', delta: +7.2, riskLevel: 'high',   id: 'green-hydrogen-electrolysis' },
-  { name: 'Semiconductor Fabs',    delta: +3.6, riskLevel: 'high',   id: 'semiconductor-fabs' },
-  { name: 'Solid-State Batteries', delta: +5.6, riskLevel: 'medium', id: 'solid-state-batteries' },
-  { name: 'GPU Data Centers',      delta: +4.8, riskLevel: 'medium', id: 'gpu-data-centers' },
-  { name: 'Grid-Scale Storage',    delta: +1.9, riskLevel: 'low',    id: 'grid-scale-storage' },
+  { name: 'LLM Training Clusters', delta: +6.2, id: 'llm-training-clusters' },
+  { name: 'Green H₂ Electrolysis', delta: +7.2, id: 'green-hydrogen-electrolysis' },
+  { name: 'Semiconductor Fabs',    delta: +3.6, id: 'semiconductor-fabs' },
+  { name: 'Solid-State Batteries', delta: +5.6, id: 'solid-state-batteries' },
+  { name: 'GPU Data Centers',      delta: +4.8, id: 'gpu-data-centers' },
+  { name: 'Grid-Scale Storage',    delta: +1.9, id: 'grid-scale-storage' },
 ];
 
 export const LATEST_NEWS = [

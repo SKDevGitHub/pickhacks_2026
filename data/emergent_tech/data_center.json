@@ -7,52 +7,24 @@
         "significance": "They underpin digital economies and are critical for scaling software, AI workloads, and connected services.",
         "valueAdd": "Strong data center capacity supports economic growth, service reliability, and local digital infrastructure development."
     },
-    "power": {
-        "power_consumption": 32000000,
-        "avg_growth_rate": 1.5
-    },
-    "water": {
-        "water_consumption": 58000000,
-        "avg_growth_rate": 1.0
-    },
-    "air_pollution": {
-        "pm25_concentration": 1.0,
-        "avg_growth_rate": 1.0
-    },
     "research_frequency": {
-        "2010": 0,
-        "2011": 1,
-        "2012": 1,
-        "2013": 1,
-        "2014": 1,
-        "2015": 3,
-        "2016": 0,
-        "2017": 3,
-        "2018": 1,
-        "2019": 1,
-        "2020": 1,
-        "2021": 3,
-        "2022": 2,
-        "2023": 0,
-        "2024": 0,
-        "2025": 0
+        "2010": 0, "2011": 1, "2012": 1, "2013": 1, "2014": 1, "2015": 3,
+        "2016": 0, "2017": 3, "2018": 1, "2019": 1, "2020": 1, "2021": 3,
+        "2022": 2, "2023": 0, "2024": 0, "2025": 0
     },
     "vc_frequency": {
-        "2010": 0,
-        "2011": 1,
-        "2012": 2,
-        "2013": 2,
-        "2014": 0,
-        "2015": 2,
-        "2016": 0,
-        "2017": 0,
-        "2018": 0,
-        "2019": 0,
-        "2020": 0,
-        "2021": 2,
-        "2022": 0,
-        "2023": 2,
-        "2024": 0,
-        "2025": 0
-    }
+        "2010": 0, "2011": 1, "2012": 2, "2013": 2, "2014": 0, "2015": 2,
+        "2016": 0, "2017": 0, "2018": 0, "2019": 0, "2020": 0, "2021": 2,
+        "2022": 0, "2023": 2, "2024": 0, "2025": 0
+    },
+    "time_series": [
+        { "year": 2023, "power_kwh": 52, "water_kgal": 1.2, "co2_kg": 22, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+        { "year": 2024, "power_kwh": 68, "water_kgal": 1.5, "co2_kg": 28, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+        { "year": 2025, "power_kwh": 95, "water_kgal": 2.2, "co2_kg": 38, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+        { "year": 2026, "power_kwh": 130, "water_kgal": 3.1, "co2_kg": 52, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
+        { "year": 2027, "power_kwh": 175, "water_kgal": 4.2, "co2_kg": 68, "data_type": "forecast", "scenario": "baseline", "confidence": 0.92 },
+        { "year": 2028, "power_kwh": 230, "water_kgal": 5.5, "co2_kg": 88, "data_type": "forecast", "scenario": "baseline", "confidence": 0.88 },
+        { "year": 2029, "power_kwh": 300, "water_kgal": 7.2, "co2_kg": 112, "data_type": "forecast", "scenario": "baseline", "confidence": 0.84 },
+        { "year": 2030, "power_kwh": 390, "water_kgal": 9.5, "co2_kg": 140, "data_type": "forecast", "scenario": "baseline", "confidence": 0.80 }
+    ]
 }

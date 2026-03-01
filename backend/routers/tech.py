@@ -48,20 +48,17 @@ async def list_technologies(
     pollution_max: Optional[int] = Query(None, alias="pollutionMax"),
     water_min: Optional[int] = Query(None, alias="waterMin"),
     water_max: Optional[int] = Query(None, alias="waterMax"),
-    horizon: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     sort_by: Optional[str] = Query(None, alias="sortBy"),
 ):
     """
     Filterable, searchable list of all technologies.
-    Supports filters for power, pollution, water ranges, category, and horizon.
+    Supports filters for power, pollution, water ranges, and category.
     """
     techs = get_all_technologies_flat()
 
     if category:
         techs = [t for t in techs if t["categoryId"] == category]
-    if horizon:
-        techs = [t for t in techs if t["forecastHorizon"] == horizon]
     if search:
         q = search.lower()
         techs = [t for t in techs if q in t["name"].lower() or q in t["description"].lower()]
@@ -85,10 +82,8 @@ async def list_technologies(
         techs.sort(key=lambda t: t["pollution"]["forecastIndex"], reverse=True)
     elif sort_by == "water":
         techs.sort(key=lambda t: t["water"]["forecastIndex"], reverse=True)
-    elif sort_by == "risk":
-        techs.sort(key=lambda t: t["externalityRisk"], reverse=True)
     else:
-        techs.sort(key=lambda t: t["externalityRisk"], reverse=True)
+        techs.sort(key=lambda t: t["power"]["forecastIndex"], reverse=True)
 
     return techs
 
@@ -104,9 +99,9 @@ async def get_technology(tech_id: str):
 
 @router.get("/alerts")
 async def alerts():
-    """Top technologies ranked by projected environmental strain (12–36m)."""
+    """Top technologies ranked by projected environmental strain."""
     techs = get_all_technologies_flat()
-    techs.sort(key=lambda t: t["externalityRisk"], reverse=True)
+    techs.sort(key=lambda t: t["power"]["forecastIndex"], reverse=True)
     return techs[:6]
 
 

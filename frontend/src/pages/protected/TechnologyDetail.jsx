@@ -32,7 +32,6 @@ export default function TechnologyDetail() {
         <p className="detail-desc">{tech.description}</p>
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
           <span className="text-overline">{tech.category}</span>
-          <span className="text-overline">Horizon: {tech.forecastHorizon}</span>
           <span className="text-overline">Region: {tech.region}</span>
         </div>
       </div>

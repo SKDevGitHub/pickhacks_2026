@@ -43,7 +43,7 @@ export default function Login() {
             color: 'var(--text-primary)',
           }}
         >
-          Tech Signals
+          Chartr AI
         </span>
       </div>
 
