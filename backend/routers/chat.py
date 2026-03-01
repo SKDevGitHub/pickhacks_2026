@@ -68,6 +68,7 @@ async def api_chat(
     payload: ChatRequest,
     _user: dict = Depends(require_edu_email),
 ):
+    print(_user)
     """
     Authenticated Gemini chat endpoint.
     Expects: { "messages": [ { "role": "user"|"assistant", "content": "..." }, ... ] }

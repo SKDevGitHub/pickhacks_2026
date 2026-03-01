@@ -1,10 +1,14 @@
 from typing import Optional
+import re
+import json
 import logging
+import os
 
 import httpx
+import pathlib
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field, field_validator
-from fastapi.responses import Response
+from fastapi.responses import StreamingResponse
 
 from core.auth import require_article_admin
 from data.article_generator import (
@@ -16,12 +20,22 @@ from data.article_generator import (
     set_article_status,
     update_article,
 )
+
+# Directory where article JSON files live
+ARTICLES_DIR = os.path.join(os.path.dirname(__file__), "data", "articles")
+
+# Directory where cached article audio files live
+ARTICLES_AUDIO_DIR = os.path.join(os.path.dirname(__file__), "data", "articles_audio")
+
+MAX_TTS_CHARS = 5_000
+
 from services.tts import (
     ELEVENLABS_API_KEY,
     ELEVENLABS_MODEL_ID,
     ELEVENLABS_OUTPUT_FORMAT,
     ELEVENLABS_VOICE_ID,
     ARTICLES_AUDIO_DIR,
+    ELEVENLABS_TTS_URL,
     article_tts_text,
     get_tts_blocked_message,
     set_tts_backoff,
@@ -40,7 +54,7 @@ async def _generate_article_audio_bytes(article_id: str, article: dict) -> bytes
     if blocked_message:
         raise HTTPException(status_code=429, detail=blocked_message)
 
-    cache_path = ARTICLES_AUDIO_DIR / f"{article_id}.mp3"
+    cache_path = pathlib.Path(ARTICLES_AUDIO_DIR) / f"{article_id}.mp3"
     if cache_path.exists():
         return cache_path.read_bytes()
 
@@ -93,7 +107,7 @@ async def _generate_article_audio_bytes(article_id: str, article: dict) -> bytes
 
 
 def _delete_article_audio(article_id: str) -> bool:
-    cache_path = ARTICLES_AUDIO_DIR / f"{article_id}.mp3"
+    cache_path = pathlib.Path(ARTICLES_AUDIO_DIR) / f"{article_id}.mp3"
     if not cache_path.exists():
         return False
     try:
@@ -237,13 +251,114 @@ async def api_delete_article(
         raise HTTPException(status_code=404, detail="Article not found")
     return {"ok": True, "id": article_id}
 
+def load_article(article_id: str) -> dict:
+    """Load an article JSON file by ID from data/articles/."""
+    path = os.path.join(ARTICLES_DIR, f"{article_id}.json")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Article '{article_id}' not found.")
+    with open(path) as f:
+        return json.load(f)
+
+def markdown_to_plaintext(md: str) -> str:
+    """Strip Markdown syntax so ElevenLabs doesn't read it aloud."""
+    text = re.sub(r"^#{1,6}\s+", "", md, flags=re.MULTILINE)
+    text = re.sub(r"\*{1,2}(.+?)\*{1,2}", r"\1", text)
+    text = re.sub(r"_{1,2}(.+?)_{1,2}", r"\1", text)
+    text = re.sub(r"^[\-\*]\s+", "", text, flags=re.MULTILINE)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+def build_tts_text(article: dict) -> str:
+    """Combine title, summary, and content into the text sent to ElevenLabs."""
+    title   = article.get("title", "")
+    summary = article.get("summary", "")
+    content = markdown_to_plaintext(article.get("content", ""))
+    full = f"{title}.\n\n{summary}.\n\n{content}"
+    if len(full) > MAX_TTS_CHARS:
+        full = full[:MAX_TTS_CHARS].rsplit(" ", 1)[0] + "…"
+    return full
+
+async def stream_elevenlabs(text: str):
+    """Async generator that streams MP3 bytes from ElevenLabs."""
+    if not ELEVENLABS_API_KEY:
+        raise HTTPException(status_code=500, detail="ELEVENLABS_API_KEY is not configured.")
+
+    headers = {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    }
+    payload = {
+        "text": text,
+        "model_id": ELEVENLABS_MODEL_ID,
+        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75},
+    }
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        async with client.stream("POST", ELEVENLABS_TTS_URL, headers=headers, json=payload) as resp:
+            if resp.status_code == 429:
+                body = await resp.aread()
+                try:
+                    detail = json.loads(body).get("detail", {})
+                    msg = detail if isinstance(detail, str) else json.dumps(detail)
+                except Exception:
+                    msg = body.decode(errors="replace")
+                raise HTTPException(status_code=429, detail=msg)
+
+            if not resp.is_success:
+                body = await resp.aread()
+                raise HTTPException(
+                    status_code=resp.status_code,
+                    detail=f"ElevenLabs error: {body.decode(errors='replace')[:300]}",
+                )
+
+            async for chunk in resp.aiter_bytes(chunk_size=4096):
+                yield chunk
 
 @router.get("/articles/{article_id}/audio")
 async def api_get_article_audio(article_id: str):
-    """Generate (and cache) TTS audio for an article via ElevenLabs."""
-    article = get_article(article_id)
-    if not article:
-        raise HTTPException(status_code=404, detail="Article not found")
+    """
+    Checks data/articles_audio/{article_id}.mp3 first — if it exists, serves it directly.
+    Otherwise generates via ElevenLabs, saves to the cache folder, then serves it.
 
-    audio_bytes = await _generate_article_audio_bytes(article_id, article)
-    return Response(content=audio_bytes, media_type="audio/mpeg")
+    Requires ELEVENLABS_KEY to be set in the environment.
+    """
+    os.makedirs(ARTICLES_AUDIO_DIR, exist_ok=True)
+    cached_path = os.path.join(ARTICLES_AUDIO_DIR, f"{article_id}.mp3")
+
+    # ── Serve from cache if available ─────────────────────────────────────────
+    if os.path.exists(cached_path):
+        def iter_cached():
+            with open(cached_path, "rb") as f:
+                while chunk := f.read(4096):
+                    yield chunk
+        return StreamingResponse(
+            iter_cached(),
+            media_type="audio/mpeg",
+            headers={"Cache-Control": "no-cache"},
+        )
+
+    # ── Generate, cache, then stream ──────────────────────────────────────────
+    article  = load_article(article_id)
+    tts_text = build_tts_text(article)
+
+    async def generate_and_cache():
+        audio_bytes = b""
+        async for chunk in stream_elevenlabs(tts_text):
+            audio_bytes += chunk
+            yield chunk
+        with open(cached_path, "wb") as f:
+            f.write(audio_bytes)
+
+    return StreamingResponse(
+        generate_and_cache(),
+        media_type="audio/mpeg",
+        headers={"Cache-Control": "no-cache"},
+    )
+    # """Generate (and cache) TTS audio for an article via ElevenLabs."""
+    # article = get_article(article_id)
+    # if not article:
+    #     raise HTTPException(status_code=404, detail="Article not found")
+    #
+    # audio_bytes = await _generate_article_audio_bytes(article_id, article)
+    # return Response(content=audio_bytes, media_type="audio/mpeg")

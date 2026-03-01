@@ -1,4 +1,5 @@
 import psycopg
+from psycopg2.extras import Json
 from dotenv import load_dotenv
 import os
 import atexit
@@ -69,8 +70,14 @@ def set_json(city: str, state: str, path: str):
 
     with conn.cursor() as cursor:
         cursor.execute("""
-            UPDATE city SET jsondata = %s WHERE name = %s AND state = %s
-        """, (data, city, state))
+            INSERT INTO city (name, state, jsondata)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (name, state)
+            DO UPDATE SET
+                jsondata = EXCLUDED.jsondata;
+        """, (city, state, Json(data)))
+            # UPDATE city SET jsondata = %s WHERE name = %s AND state = %s
+        # """, (data, city, state))
     conn.commit()
 
 def get_json(city: str, state: str) -> dict:
