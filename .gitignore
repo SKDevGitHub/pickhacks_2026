@@ -1,24 +1,20 @@
+# Environment
 .env
-*.env
-**/**.env
-*/.env
+**/.env
 
-.venv
-**/.venv
+# Python
 .venv/
-**/.venv/**
-
-__pycache__
-**/__pycache__
-
+**/.venv/
+__pycache__/
+**/__pycache__/
 *.pyc
-**/**.pyc
-*/*.pyc
-node_modules/
-frontend/dist/
-_pycache__
-.vscode
-gaz/
-gaz/**
-**/gaz/**
 
+# Node
+node_modules/
+
+# Build outputs
+frontend/dist/
+output/
+
+# IDE
+.vscode/
