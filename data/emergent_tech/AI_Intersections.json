@@ -5,24 +5,8 @@
         "significance": "Urban congestion and safety are rising concerns; intelligent intersections provide a near-term path to smarter mobility networks.",
         "valueAdd": "Cities can reduce commute time, improve emergency response routing, and lower idling-related emissions through better traffic coordination."
     },
-    "research_frequency": {
-        "2010": 0, "2011": 4, "2012": 8, "2013": 12, "2014": 20, "2015": 25,
-        "2016": 25, "2017": 48, "2018": 51, "2019": 34, "2020": 42, "2021": 40,
-        "2022": 19, "2023": 15, "2024": 6, "2025": 0
-    },
-    "vc_frequency": {
-        "2010": 0, "2011": 0, "2012": 1, "2013": 0, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 0, "2018": 0, "2019": 1, "2020": 0, "2021": 0,
-        "2022": 1, "2023": 0, "2024": 1, "2025": 0
-    },
-    "time_series": [
-        { "year": 2023, "power_kwh": 4.2, "water_kgal": 0.02, "co2_kg": 0, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2024, "power_kwh": 5.1, "water_kgal": 0.03, "co2_kg": 0, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2025, "power_kwh": 5.8, "water_kgal": 0.03, "co2_kg": 0, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2026, "power_kwh": 6.6, "water_kgal": 0.04, "co2_kg": 0, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2027, "power_kwh": 7.5, "water_kgal": 0.05, "co2_kg": 0, "data_type": "forecast", "scenario": "baseline", "confidence": 0.92 },
-        { "year": 2028, "power_kwh": 8.5, "water_kgal": 0.06, "co2_kg": 0, "data_type": "forecast", "scenario": "baseline", "confidence": 0.88 },
-        { "year": 2029, "power_kwh": 9.8, "water_kgal": 0.07, "co2_kg": 0, "data_type": "forecast", "scenario": "baseline", "confidence": 0.84 },
-        { "year": 2030, "power_kwh": 11.2, "water_kgal": 0.08, "co2_kg": 0, "data_type": "forecast", "scenario": "baseline", "confidence": 0.80 }
-    ]
+    "power_usage": 120,
+    "water_usage": 2.5,
+    "co2_emissions": 45,
+    "cost of implementation": 12.00
 }

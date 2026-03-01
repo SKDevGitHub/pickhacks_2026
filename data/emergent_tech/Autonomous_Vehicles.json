@@ -5,24 +5,8 @@
         "significance": "They are a major shift in transportation operations with implications for logistics, public safety, and accessibility.",
         "valueAdd": "Autonomous fleets can improve road safety outcomes, increase mobility access, and enhance freight efficiency across urban and regional networks."
     },
-    "research_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 0, "2014": 0, "2015": 1,
-        "2016": 2, "2017": 1, "2018": 1, "2019": 0, "2020": 1, "2021": 0,
-        "2022": 0, "2023": 0, "2024": 0, "2025": 0
-    },
-    "vc_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 0, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 0, "2018": 0, "2019": 0, "2020": 0, "2021": 0,
-        "2022": 0, "2023": 0, "2024": 0, "2025": 0
-    },
-    "time_series": [
-        { "year": 2023, "power_kwh": 45, "water_kgal": 0.5, "co2_kg": 18, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2024, "power_kwh": 62, "water_kgal": 0.7, "co2_kg": 24, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2025, "power_kwh": 88, "water_kgal": 1.0, "co2_kg": 34, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2026, "power_kwh": 120, "water_kgal": 1.4, "co2_kg": 46, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2027, "power_kwh": 165, "water_kgal": 2.0, "co2_kg": 62, "data_type": "forecast", "scenario": "baseline", "confidence": 0.91 },
-        { "year": 2028, "power_kwh": 220, "water_kgal": 2.8, "co2_kg": 82, "data_type": "forecast", "scenario": "baseline", "confidence": 0.88 },
-        { "year": 2029, "power_kwh": 290, "water_kgal": 3.8, "co2_kg": 105, "data_type": "forecast", "scenario": "baseline", "confidence": 0.85 },
-        { "year": 2030, "power_kwh": 380, "water_kgal": 5.0, "co2_kg": 135, "data_type": "forecast", "scenario": "baseline", "confidence": 0.82 }
-    ]
+    "power_usage": 120,
+    "water_usage": 2.5,
+    "co2_emissions": 45,
+    "cost of implementation": 12.00
 }

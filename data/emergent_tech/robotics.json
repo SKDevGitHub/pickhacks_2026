@@ -5,24 +5,8 @@
         "significance": "Automation demand is increasing across manufacturing and logistics as labor constraints and throughput requirements grow.",
         "valueAdd": "Robotics can improve productivity, worker safety, and manufacturing consistency while enabling higher-quality output."
     },
-    "research_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 2, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 0, "2018": 3, "2019": 3, "2020": 2, "2021": 0,
-        "2022": 0, "2023": 0, "2024": 0, "2025": 0
-    },
-    "vc_frequency": {
-        "2010": 0, "2011": 0, "2012": 0, "2013": 1, "2014": 0, "2015": 0,
-        "2016": 0, "2017": 0, "2018": 0, "2019": 0, "2020": 0, "2021": 0,
-        "2022": 0, "2023": 0, "2024": 0, "2025": 0
-    },
-    "time_series": [
-        { "year": 2023, "power_kwh": 12, "water_kgal": 0.15, "co2_kg": 5, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2024, "power_kwh": 18, "water_kgal": 0.22, "co2_kg": 7, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2025, "power_kwh": 28, "water_kgal": 0.35, "co2_kg": 11, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2026, "power_kwh": 42, "water_kgal": 0.52, "co2_kg": 16, "data_type": "historical", "scenario": "actual", "confidence": 1.0 },
-        { "year": 2027, "power_kwh": 60, "water_kgal": 0.75, "co2_kg": 23, "data_type": "forecast", "scenario": "baseline", "confidence": 0.90 },
-        { "year": 2028, "power_kwh": 85, "water_kgal": 1.05, "co2_kg": 32, "data_type": "forecast", "scenario": "baseline", "confidence": 0.86 },
-        { "year": 2029, "power_kwh": 120, "water_kgal": 1.50, "co2_kg": 44, "data_type": "forecast", "scenario": "baseline", "confidence": 0.82 },
-        { "year": 2030, "power_kwh": 165, "water_kgal": 2.10, "co2_kg": 60, "data_type": "forecast", "scenario": "baseline", "confidence": 0.78 }
-    ]
+    "power_usage": 120,
+    "water_usage": 2.5,
+    "co2_emissions": 45,
+    "cost of implementation": 12.00
 }
